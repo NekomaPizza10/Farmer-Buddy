@@ -35,6 +35,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Audio } from 'expo-av';
+import { useAuth } from '../hooks/useAuth';
 import { useAppContext } from '../context/AppContext';
 import {
   ChatMessage,
@@ -245,6 +246,7 @@ function MessageAttachments({ attachments }: { attachments: MediaAttachment[] })
 
 export default function AgronomistChatScreen({ navigation }: any) {
   const { themeColors, t } = useAppContext();
+  const { profile } = useAuth();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -479,7 +481,8 @@ export default function AgronomistChatScreen({ navigation }: any) {
         messages,
         undefined,
         locationCtx,
-        atts.length > 0 ? atts : undefined
+        atts.length > 0 ? atts : undefined,
+        profile?.role === 'manager'
       );
       setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: responseText, sender: 'bot' }]);
     } catch (error: any) {

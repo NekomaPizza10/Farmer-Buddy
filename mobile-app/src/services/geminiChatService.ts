@@ -1,4 +1,6 @@
 import { GEMINI_API_KEY } from '@env';
+import { supabase } from './supabase';
+import { Buffer } from 'buffer';
 
 // Primary model
 const MODELS_TO_TRY = ['gemini-2.5-flash'];
@@ -36,14 +38,57 @@ export const sendAgronomistMessage = async (
   history: ChatMessage[],
   qdrantContext?: string,
   locationContext?: LocationWeatherContext,
-  attachments?: MediaAttachment[]
+  attachments?: MediaAttachment[],
+  isManager?: boolean
 ): Promise<string> => {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key is not configured.');
   }
 
+  // 1. Fetch recent bodycam summaries for context (global recent activity) ONLY for managers
+  let bodycamSummariesContext = '';
+  if (isManager) {
+    try {
+    const { data: recData, error } = await supabase
+      .from('recordings')
+      .select('id, started_at, summary, employee_id')
+      .eq('status', 'completed')
+      .not('summary', 'is', null)
+      .order('started_at', { ascending: false })
+      .limit(10);
+
+    if (!error && recData && recData.length > 0) {
+      // 1b. Fetch the user details to map names/emails
+      const userIds = Array.from(new Set(recData.map(r => r.employee_id)));
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, name, email')
+        .in('id', userIds);
+        
+      const userMap = new Map(usersData?.map(u => [u.id, u]) || []);
+
+      bodycamSummariesContext = `RECENT FARM ACTIVITY (summarised from employee bodycam recordings):\n`;
+      recData.forEach((rec, idx) => {
+        const dateStr = new Date(rec.started_at).toLocaleString();
+        const user = userMap.get(rec.employee_id);
+        const userName = user?.name || 'Unknown Employee';
+        const userEmail = user?.email || 'Unknown Email';
+        bodycamSummariesContext += `[Recording ${idx + 1} at ${dateStr} by ${userName} (${userEmail})]:\n${rec.summary}\n\n`;
+      });
+        bodycamSummariesContext += `Use these recent activity summaries to understand what employees have been doing lately when asked.\n\n`;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch bodycam summaries:', err);
+      // Fail silently and proceed without the context
+    }
+  }
+
   // ── Build the system preamble (plain text part) ────────────────────────────
   let preamble = `${SYSTEM_PROMPT}\n\n`;
+
+  if (bodycamSummariesContext) {
+    preamble += bodycamSummariesContext;
+  }
 
   if (locationContext) {
     preamble += `FARMER LOCATION & CURRENT WEATHER:\n`;
@@ -86,7 +131,8 @@ export const sendAgronomistMessage = async (
         try {
           const decoded = Buffer.from(att.base64, 'base64').toString('utf-8');
           parts.unshift({ text: `FILE CONTENT (${att.name ?? att.mimeType}):\n${decoded}\n\n` });
-        } catch {
+        } catch (err) {
+          console.error("Text decode failed for attachment:", err);
           // If decode fails, skip attachment silently
         }
       }
