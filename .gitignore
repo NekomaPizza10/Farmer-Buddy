@@ -1,7 +1,18 @@
-docs/
+# dependencies
 node_modules/
+
+# expo
 .expo/
 .expo-shared/
+
+# build / cache
 dist/
 build/
+.cache/
+
+# logs
 *.log
+
+# OS files
+.DS_Store
+Thumbs.db
