@@ -17,7 +17,7 @@ import { useShift } from '../hooks/useShift';
 import { usePresence } from '../hooks/usePresence';
 import { supabase } from '../services/supabase';
 import { UserProfile } from '../types';
-import ManagerLiveGrid from '../components/ManagerLiveGrid';
+import ManagerLiveGrid from '../components/Manager/ManagerLiveGrid';
 import { RootStackParamList } from '../navigation/types';
 import { useAppContext } from '../context/AppContext';
 

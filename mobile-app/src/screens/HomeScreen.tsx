@@ -10,7 +10,7 @@ import { supabase } from '../services/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import WeatherWidget from '../components/WeatherWidget';
+import WeatherWidget from '../components/Weather/WeatherWidget';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // 2-column grid: screen minus 32px padding minus 12px gap between buttons

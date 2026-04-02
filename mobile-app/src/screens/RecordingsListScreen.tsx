@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { supabase } from '../services/supabase';
-import RecordingSummaryModal from '../components/RecordingSummaryModal';
+import RecordingSummaryModal from '../components/Manager/RecordingSummaryModal';
 
 interface Recording {
   id: string;

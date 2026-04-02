@@ -1,24 +1,20 @@
-import { registerGlobals } from '@livekit/react-native';
-import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { AuthProvider } from './src/hooks/useAuth';
-import { ShiftProvider } from './src/hooks/useShift';
-import { AppProvider } from './src/context/AppContext';
+import React from 'react';
+import { AuthProvider } from './src/hooks/useAuth';       // For login, session, and role
+import { AppProvider } from './src/context/AppContext';   // For other app data
 import RootNavigator from './src/navigation/RootNavigator';
-
-registerGlobals();
+import { NavigationContainer } from '@react-navigation/native';
+import { ShiftProvider } from '@/hooks/useShift';
 
 export default function App() {
   return (
-    <AppProvider>
-      <AuthProvider>
-        <ShiftProvider>
+    <AuthProvider>  {/* <== Top level */}
+      <AppProvider> 
+        <ShiftProvider> {/* <== Nested inside, so it can use useAuth() */}
           <NavigationContainer>
             <RootNavigator />
-            <StatusBar style="light" />
           </NavigationContainer>
         </ShiftProvider>
-      </AuthProvider>
-    </AppProvider>
+      </AppProvider>
+    </AuthProvider>
   );
 }

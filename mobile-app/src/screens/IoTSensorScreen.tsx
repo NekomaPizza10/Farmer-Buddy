@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import { analyzeFarmData } from '../services/geminiService';
+import { analyzeFarmData } from '../services/api/geminiService';
 import { useAppContext } from '../context/AppContext';
 
 // --- CONSTANTS ---

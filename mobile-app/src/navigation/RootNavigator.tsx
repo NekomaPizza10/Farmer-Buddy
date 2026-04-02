@@ -1,103 +1,41 @@
 import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
+
 import { useAuth } from '../hooks/useAuth';
 import AuthStack from './AuthStack';
 import ManagerTabs from './ManagerTabs';
 import EmployeeTabs from './EmployeeTabs';
-import RecordingsListScreen from '../screens/RecordingsListScreen';
-import ShiftDetailsScreen from '../screens/ShiftDetailsScreen';
-import HomeScreen from '../screens/HomeScreen';
-import LeafDetectionScreen from '../screens/LeafDetectionScreen';
-import IoTSensorScreen from '../screens/IoTSensorScreen';
-import AgronomistChatScreen from '../screens/AgronomistChatScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import { RootStackParamList } from './types';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator();
 
-export default function RootNavigator() {
-  const { session, profile, loading } = useAuth();
+const RootNavigator = () => {
+  const { session, loading, role } = useAuth();
 
+  // 1. Show a loading spinner while we check for a session.
   if (loading) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#3B82F6" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
 
-  const isLoggedIn = !!session;
-  const isManager = profile?.role === 'manager';
-  const isEmployee = profile?.role === 'employee';
-
+  // 2. Once loading is false, render the correct navigator.
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        headerStyle: { backgroundColor: '#0F172A' },
-        headerTintColor: '#F8FAFC',
-        headerTitleStyle: { fontWeight: '700' },
-      }}
-    >
-      {!isLoggedIn ? (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!session ? (
+        // User is not logged in, show login/register screens.
         <Stack.Screen name="Auth" component={AuthStack} />
+      ) : role === 'manager' ? (
+        // User is a manager, show the manager tabs.
+        <Stack.Screen name="ManagerApp" component={ManagerTabs} />
       ) : (
-        <Stack.Group>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen 
-            name="ManagerTabs" 
-            component={ManagerTabs} 
-            options={{ headerShown: true, title: 'Bodycam Manager' }} 
-          />
-          <Stack.Screen 
-            name="EmployeeTabs" 
-            component={EmployeeTabs} 
-            options={{ headerShown: true, title: 'Bodycam App' }} 
-          />
-          <Stack.Screen 
-            name="LeafDetection" 
-            component={LeafDetectionScreen}
-            options={{ headerShown: true, title: 'Leaf Detection' }}
-          />
-          <Stack.Screen 
-            name="IoTSensorScreen" 
-            component={IoTSensorScreen}
-            options={{ headerShown: true, title: 'Farm Sensor Analysis' }}
-          />
-          <Stack.Screen 
-            name="AgronomistChat" 
-            component={AgronomistChatScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="SettingsScreen" 
-            component={SettingsScreen}
-            options={{ headerShown: true, title: 'Settings' }}
-          />
-        </Stack.Group>
+        // User is an employee (or has no specific role), show employee tabs.
+        <Stack.Screen name="EmployeeApp" component={EmployeeTabs} />
       )}
-      {/* Shared screens accessible from any tab */}
-      <Stack.Screen
-        name="RecordingsList"
-        component={RecordingsListScreen}
-        options={{ headerShown: true, title: 'Recordings' }}
-      />
-      <Stack.Screen
-        name="ShiftDetails"
-        component={ShiftDetailsScreen}
-        options={{ headerShown: true, title: 'Shift Details' }}
-      />
     </Stack.Navigator>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-});
+export default RootNavigator;

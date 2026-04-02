@@ -6,6 +6,7 @@ import { UserProfile } from '../types';
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  role: string | null;
   profile: UserProfile | null;
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
@@ -44,41 +45,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    });
+    const initializeAuth = async () => {
+      // 1. Get the initial session.
+      const { data: { session: initialSession }, error } = await supabase.auth.getSession();
 
+      if (error) {
+        console.error("Error fetching initial session:", error.message);
+      }
+      
+      // 2. If a session exists, fetch the associated profile.
+      if (initialSession) {
+        const userProfile = await fetchProfile(initialSession.user.id);
+        setSession(initialSession);
+        setUser(initialSession.user);
+        setProfile(userProfile);
+      }
+      
+      // 3. We are done with the initial check, so stop loading.
+      setLoading(false);
+    };
+
+    // Run the initialization
+    initializeAuth();
+
+    // 4. Set up a listener for future auth changes (login/logout).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          const p = await fetchProfile(session.user.id);
-          setProfile(p);
+      async (_event, newSession) => {
+        // If a user logs in, fetch their profile.
+        if (newSession?.user) {
+          const userProfile = await fetchProfile(newSession.user.id);
+          setProfile(userProfile);
         } else {
+          // If a user logs out, clear the profile.
           setProfile(null);
         }
-        setLoading(false);
+        
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (user && !profile) {
-      fetchProfile(user.id).then((p) => {
-        setProfile(p);
-        setLoading(false);
-      });
-    } else if (!user) {
-      setLoading(false);
-    }
-  }, [user]);
+    // Cleanup the subscription when the component unmounts.
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []); // The empty array [] ensures this runs only once on mount.
 
   const signUp = async (email: string, password: string, name: string) => {
+    // First, attempt to sign up the user.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -87,22 +101,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
 
-    if (error) return { error };
+    // Handle initial errors (e.g., weak password).
+    if (error) {
+      return { error };
+    }
 
-    // Create user profile row
+    // This is the key check.
+    // If data.user exists but the identities array is empty, it means the user
+    // already exists but might not have confirmed their email.
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      return { 
+        error: { 
+          message: 'This email is already registered. Please log in or reset your password.' 
+        } 
+      };
+    }
+
+    // If we get here, it's a genuinely new user. Now, create their profile.
     if (data.user) {
       const { error: profileError } = await supabase.from('users').insert({
         id: data.user.id,
         email,
         name,
-        role: null,
+        role: 'employee', // Assign a default role
       });
+
       if (profileError) {
         console.error('Error creating profile:', profileError.message);
         return { error: profileError };
       }
     }
 
+    // Success! No errors to return.
     return { error: null };
   };
 
@@ -133,6 +163,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const role = profile?.role || null;   // Derive role from profile for easy access
+  
   return (
     <AuthContext.Provider
       value={{
@@ -140,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         profile,
         loading,
+        role,
         signUp,
         signIn,
         signOut,

@@ -3,11 +3,13 @@ import { AppState, AppStateStatus } from 'react-native';
 import { supabase } from '../services/supabase';
 import { Shift } from '../types';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { useAuth } from './useAuth';
+
 
 interface ShiftContextType {
   activeShift: Shift | null;
   loading: boolean;
-  startShift: (managerId: string) => Promise<{ error: any }>;
+  startShift: () => Promise<{ error: any }>;
   endShift: () => Promise<{ error: any }>;
   elapsedSeconds: number;
 }
@@ -15,6 +17,7 @@ interface ShiftContextType {
 const ShiftContext = createContext<ShiftContextType | undefined>(undefined);
 
 export function ShiftProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth(); // ✅ 3. Get the current user from the Auth context
   const [activeShift, setActiveShift] = useState<Shift | null>(null);
   const [loading, setLoading] = useState(true);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -114,7 +117,16 @@ export function ShiftProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.remove();
   }, [fetchActiveShift]);
 
-  const startShift = async (managerId: string) => {
+  const startShift = async () => {
+    if (!user) {
+      return { error: { message: 'You must be logged in to start a shift.' } };
+    }
+
+    // You can also add a role check here if needed:
+    //if (role !== 'manager') {
+    //  return { error: { message: 'Only managers can start a shift.' } };
+    //}
+
     // Double-press guard: check if there's already an active shift
     if (activeShift) {
       return { error: { message: 'A shift is already active' } };
@@ -122,7 +134,7 @@ export function ShiftProvider({ children }: { children: React.ReactNode }) {
 
     const { data, error } = await supabase
       .from('shifts')
-      .insert({ manager_id: managerId })
+      .insert({ manager_id: user.id })
       .select()
       .single();
 

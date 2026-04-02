@@ -13,7 +13,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useShift } from '../hooks/useShift';
 import { usePresence } from '../hooks/usePresence';
-import EmployeeStreaming from '../components/EmployeeStreaming';
+import EmployeeStreaming from '../components/Employee/EmployeeStreaming';
 import { useAppContext } from '../context/AppContext';
 
 function formatTime(totalSeconds: number): string {
