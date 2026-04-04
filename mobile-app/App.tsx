@@ -7,9 +7,9 @@ import { ShiftProvider } from '@/hooks/useShift';
 
 export default function App() {
   return (
-    <AuthProvider>  {/* <== Top level */}
+    <AuthProvider>
       <AppProvider> 
-        <ShiftProvider> {/* <== Nested inside, so it can use useAuth() */}
+        <ShiftProvider>
           <NavigationContainer>
             <RootNavigator />
           </NavigationContainer>

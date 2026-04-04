@@ -74,7 +74,7 @@ const BottomTaskbar = () => {
           >
             <Image
               source={tab.icon}
-              style={[styles.icon, { tintColor: tint }]} // Dynamic color tint
+              style={[styles.icon, { tintColor: tint }]}
               resizeMode="contain"
             />
 

@@ -57,5 +57,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// THIS LINE IS CRITICAL - it's what "default export" means
 export default SummaryUpdates;
