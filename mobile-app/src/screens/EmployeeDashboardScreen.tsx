@@ -8,8 +8,8 @@ import {
   Modal,
   Animated,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { useShift } from '../hooks/useShift';
 import { usePresence } from '../hooks/usePresence';

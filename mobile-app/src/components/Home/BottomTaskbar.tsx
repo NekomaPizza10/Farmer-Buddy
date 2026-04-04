@@ -78,7 +78,7 @@ const BottomTaskbar = () => {
               resizeMode="contain"
             />
 
-            <Text style={[styles.label, { color: tint }]}>  // Dynamic label color
+            <Text style={[styles.label, { color: tint }]}>
               {tab.label}
             </Text>
           </TouchableOpacity>

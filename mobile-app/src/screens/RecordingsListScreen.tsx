@@ -138,7 +138,7 @@ export default function RecordingsListScreen({ route, navigation }: RecordingsLi
           <Text style={styles.timeValue}>{formatTime(item.started_at)}</Text>
         </View>
 
-        {item.ended_at && (
+        {!!item.ended_at && (
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Ended</Text>
             <Text style={styles.timeValue}>{formatTime(item.ended_at)}</Text>

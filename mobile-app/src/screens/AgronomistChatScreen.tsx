@@ -42,7 +42,7 @@ import {
   LocationWeatherContext,
   MediaAttachment,
   sendAgronomistMessage,
-} from '../services/geminiChatService';
+} from '../services/api/geminiChatService';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -514,7 +514,7 @@ export default function AgronomistChatScreen({ navigation }: any) {
             <MessageAttachments attachments={item.attachments} />
           )}
           {/* Only show text label if it's non-empty or non-placeholder */}
-          {(item.text && item.text !== '📎 Attachment') && (
+          {(!!item.text && item.text !== '📎 Attachment') && (
             isUser ? (
               <Text style={[scr.messageText, scr.userText]}>{item.text}</Text>
             ) : (
@@ -564,9 +564,9 @@ export default function AgronomistChatScreen({ navigation }: any) {
               <MaterialCommunityIcons name="sprout" size={48} color="rgba(74,222,128,0.3)" />
               <Text style={scr.emptyText}>Ask your agronomist anything about crops, soil, or farm management.</Text>
               <Text style={scr.emptyHint}>📎 Attach images or documents · 🎤 Send a voice note</Text>
-              {locationCtx?.locationName && (
+              {!!locationCtx?.locationName && (
                 <Text style={scr.emptySubtext}>
-                  📍 Advice tailored to {locationCtx.locationName}
+                  {`📍 Advice tailored to ${locationCtx.locationName}`}
                   {locationCtx.temp !== undefined ? ` · ${locationCtx.temp}°C` : ''}
                   {locationCtx.condition ? ` · ${locationCtx.condition}` : ''}
                 </Text>

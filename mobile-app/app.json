@@ -5,12 +5,10 @@
     "scheme": "bodycam-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": null,
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "hostType":"lan",
     "splash": {
-      "image": null,
       "resizeMode": "contain",
       "backgroundColor": "#0F172A"
     },

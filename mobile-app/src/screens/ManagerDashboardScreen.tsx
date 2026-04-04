@@ -7,9 +7,9 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../hooks/useAuth';
@@ -122,7 +122,7 @@ export default function ManagerDashboardScreen() {
     actionLockRef.current = true;
     setActionLoading(true);
 
-    const { error } = await startShift(profile.id);
+    const { error } = await startShift();
 
     setActionLoading(false);
     actionLockRef.current = false;
@@ -319,7 +319,7 @@ export default function ManagerDashboardScreen() {
       {/* Recordings section (visible during active shift) */}
       {activeShift && recordingSummaries.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📼 {t('Recordings')}</Text>
+          <Text style={styles.sectionTitle}>{`📼 ${t('Recordings')}`}</Text>
           {employees
             .filter((e) => recordingSummaries.find((r) => r.employee_id === e.id))
             .map((emp) => {
@@ -355,7 +355,7 @@ export default function ManagerDashboardScreen() {
       {/* Employee List */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {t('Employees')} ({employees.length}) — {onlineCount} online
+          {`${t('Employees')} (${employees.length}) — ${onlineCount} online`}
         </Text>
         {employees.length === 0 ? (
           <View style={styles.emptyState}>
