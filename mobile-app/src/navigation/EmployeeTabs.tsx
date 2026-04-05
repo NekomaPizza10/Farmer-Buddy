@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import EmployeeDashboardScreen from '../screens/EmployeeDashboardScreen';
+import HomePage from '../screens/HomePage';
 import SettingsScreen from '../screens/SettingsScreen';
 import { EmployeeTabParamList } from './types';
 import { Text } from 'react-native';
@@ -30,10 +30,11 @@ export default function EmployeeTabs() {
     >
       <Tab.Screen
         name="Dashboard"
-        component={EmployeeDashboardScreen}
+        component={HomePage}
         options={{
+          tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20 }}>📹</Text>
+            <Text style={{ fontSize: 20 }}>🏠</Text>
           ),
         }}
       />
