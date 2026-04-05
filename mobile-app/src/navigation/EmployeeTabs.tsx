@@ -1,15 +1,19 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomePage from '../screens/HomePage';
+import FarmerSensorScreen from '../screens/FarmerSensorScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import { EmployeeTabParamList } from './types';
 import { Text } from 'react-native';
+
+import TaskBar from '../components/TaskBar';
 
 const Tab = createBottomTabNavigator<EmployeeTabParamList>();
 
 export default function EmployeeTabs() {
   return (
     <Tab.Navigator
+        tabBar={props => <TaskBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -35,6 +39,16 @@ export default function EmployeeTabs() {
           tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20 }}>🏠</Text>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="FarmerSensor"
+        component={FarmerSensorScreen}
+        options={{
+          tabBarLabel: 'Sensor',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20 }}>🌱</Text>
           ),
         }}
       />
