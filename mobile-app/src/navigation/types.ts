@@ -24,6 +24,7 @@ export type RootStackParamList = {
   SettingsScreen: undefined;
   ManagerTabs: undefined;
   EmployeeTabs: undefined;
+  WeatherScreen: undefined;
   RecordingsList: {
     shiftId: string;
     employeeId: string;

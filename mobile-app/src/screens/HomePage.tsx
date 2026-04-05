@@ -30,7 +30,7 @@ const HomePage = () => {
 			</View>
 			<ScrollView style={styles.homePageInner} contentContainerStyle={{ height: 1050, paddingBottom: 40 }}>
 				<View style={styles.weatherParent}>
-					<Pressable style={styles.weather} onPress={() => { }}>
+					<Pressable style={styles.weather} onPress={() => navigation.navigate('WeatherScreen' as never)}>
 						<View style={styles.weatherCard} />
 						<Text style={[styles.location, styles.textFlexBox1]}>Location</Text>
 						<Text style={[styles.text, styles.textLayout]}>30°</Text>

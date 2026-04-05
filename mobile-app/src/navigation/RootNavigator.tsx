@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import AuthStack from './AuthStack';
 import ManagerTabs from './ManagerTabs';
 import EmployeeTabs from './EmployeeTabs';
+import WeatherScreen from '../screens/WeatherScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,7 +33,10 @@ const RootNavigator = () => {
         <Stack.Screen name="ManagerApp" component={ManagerTabs} />
       ) : (
         // User is an employee (or has no specific role), show employee tabs.
-        <Stack.Screen name="EmployeeApp" component={EmployeeTabs} />
+        <>
+          <Stack.Screen name="EmployeeApp" component={EmployeeTabs} />
+          <Stack.Screen name="WeatherScreen" component={WeatherScreen} />
+        </>
       )}
     </Stack.Navigator>
   );
