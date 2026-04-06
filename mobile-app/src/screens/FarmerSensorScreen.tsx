@@ -13,7 +13,7 @@ const FarmerSensorScreen = () => {
 					<View style={[styles.topCard, styles.cardPosition]}>
 						<View style={[styles.topCardChild, styles.cardChildPosition]} />
 						<View style={[styles.moisture, styles.moistureLayout]}>
-							<Image style={[styles.eclipseIcon, styles.moistureLayout]} resizeMode="cover" />
+							<Image style={[styles.eclipseIcon, styles.moistureLayout]} source={require("assets/image/AnalyzeIcon.png")} resizeMode="cover" />
 							<Text style={[styles.text, styles.sensorClr]}>65%</Text>
 							<Text style={styles.moisture2}>Moisture</Text>
 						</View>
@@ -37,7 +37,7 @@ const FarmerSensorScreen = () => {
 						<Text style={[styles.npkData, styles.npkDataTypo]}>{`NPK Data `}</Text>
 						<View style={[styles.nitrogen, styles.nitrogenLayout]}>
 							<Text style={[styles.nitrogen2, styles.nitrogen2Typo]}>Nitrogen</Text>
-							<Image style={styles.nitrogenIcon} resizeMode="cover" />
+							<Image style={styles.nitrogenIcon} source={require("assets/image/AnalyzeIcon.png")} resizeMode="cover" />
 							<Text style={styles.text3}>65%</Text>
 						</View>
 						<View style={[styles.phosphorus, styles.nitrogenLayout]}>
@@ -52,7 +52,7 @@ const FarmerSensorScreen = () => {
 						</View>
 					</View>
 					<Text style={[styles.defineFarmContext, styles.npkDataTypo]}>Define Farm Context  (for AI)</Text>
-					<Image style={styles.cardIcon} resizeMode="cover" />
+					<Image style={styles.cardIcon} source={require("assets/image/ActSens.png")} resizeMode="cover" />
 					<View style={[styles.crop, styles.cropLayout1]}>
 						<View style={[styles.cropChild, styles.cropLayout1]} />
 						<View style={[styles.cropType, styles.cropLayout]}>
@@ -76,11 +76,11 @@ const FarmerSensorScreen = () => {
 						<Image style={[styles.dropdownIcon2, styles.dropdownIconLayout]} resizeMode="cover" />
 					</View>
 					<Text style={[styles.soilSensor, styles.sensorClr]}>Soil Sensor</Text>
-					<Pressable style={[styles.analyseButton, styles.analyseLayout]} onPress={() => { }}>
-						<Image style={[styles.analyseButtonChild, styles.analyseLayout]} resizeMode="cover" />
+					<Pressable style={[styles.analyseButton, styles.analyseLayout]} onPress={() => { navigation.navigate('Report' as never) }}>
+						<Image style={[styles.analyseButtonChild, styles.analyseLayout]} source={require("assets/image/AnalyzeIcon.png")} resizeMode="cover" />
 						<View style={[styles.analyzeWithGeminiAiParent, styles.observation2Position]}>
 							<Text style={[styles.analyzeWithGemini, styles.buddy2Typo]}>Analyze with Gemini AI</Text>
-							<Image style={[styles.maskGroupIcon, styles.egCornLayout]} resizeMode="cover" />
+							<Image style={[styles.maskGroupIcon, styles.egCornLayout]} source={require("assets/image/MaskgroupIcon.png")} resizeMode="cover" />
 						</View>
 					</Pressable>
 					<View style={[styles.observation, styles.observationLayout]}>
@@ -626,11 +626,10 @@ const styles = StyleSheet.create({
 		left: 31
 	},
 	analyseButton: {
-		marginLeft: -106,
 		top: 825,
-		width: 206,
+		width: "100%",
 		height: 45,
-		left: "50%"
+		position: "absolute"
 	},
 	analyseButtonChild: {
 		marginLeft: -103,
@@ -638,13 +637,16 @@ const styles = StyleSheet.create({
 		height: 45,
 		left: "50%",
 		borderRadius: 16,
-		top: 0
+		top: 0,
+		backgroundColor: "#2d4b2a"
 	},
 	analyzeWithGeminiAiParent: {
-		left: 11,
+		left: "50%",
+		marginLeft: -90,
 		width: 180,
 		top: 14,
-		height: 17
+		height: 17,
+		position: "absolute"
 	},
 	analyzeWithGemini: {
 		left: 21,

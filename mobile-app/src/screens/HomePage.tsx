@@ -40,7 +40,7 @@ const HomePage = () => {
 							<View style={[styles.weatherIconParent, styles.activeAnomaliesLayout]}>
 								<Image style={[styles.weatherIcon, styles.iconLayout]} source={require('assets/image/SunnyCloud.png')} resizeMode="cover" />
 								<Image style={[styles.image7Icon, styles.iconLayout]} source={require('assets/image/SunnyCloud.png')} resizeMode="cover" />
-								<Image style={[styles.sunnyWeatherIcon, styles.text4Position]} source={require('assets/image/Sunny weather.png')} resizeMode="cover" />
+								<Image style={[styles.sunnyWeatherIcon, styles.text4Position]} source={require('assets/image/Sunnyweather.png')} resizeMode="cover" />
 								<Image style={[styles.image9Icon, styles.text5Position]} source={require('assets/image/Rain.png')} resizeMode="cover" />
 								<Image style={[styles.image6Icon, styles.text6Position]} source={require('assets/image/cloud.png')} resizeMode="cover" />
 								<Image style={[styles.image3Icon, styles.text7Position]} source={require('assets/image/cloud.png')} resizeMode="cover" />

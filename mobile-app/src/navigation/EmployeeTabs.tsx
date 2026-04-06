@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomePage from '../screens/HomePage';
 import FarmerSensorScreen from '../screens/FarmerSensorScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import BodyCamera from '../screens/BodyCamera';
 import { EmployeeTabParamList } from './types';
 import { Text } from 'react-native';
 
@@ -13,7 +14,7 @@ const Tab = createBottomTabNavigator<EmployeeTabParamList>();
 export default function EmployeeTabs() {
   return (
     <Tab.Navigator
-        tabBar={props => <TaskBar {...props} />}
+      tabBar={props => <TaskBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -42,6 +43,7 @@ export default function EmployeeTabs() {
           ),
         }}
       />
+
       <Tab.Screen
         name="FarmerSensor"
         component={FarmerSensorScreen}
@@ -52,6 +54,18 @@ export default function EmployeeTabs() {
           ),
         }}
       />
+
+      <Tab.Screen
+        name="BodyCamera"
+        component={BodyCamera}
+        options={{
+          tabBarLabel: 'BodyCam',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20 }}>📷</Text>
+          ),
+        }}
+      />
+
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}

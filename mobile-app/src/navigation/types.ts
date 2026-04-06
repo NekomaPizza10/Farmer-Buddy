@@ -13,6 +13,7 @@ export type EmployeeTabParamList = {
   Dashboard: undefined;
   FarmerSensor: undefined;
   Settings: undefined;
+  BodyCamera: undefined;
 };
 
 export type RootStackParamList = {
