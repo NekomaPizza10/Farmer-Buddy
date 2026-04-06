@@ -2,10 +2,12 @@ import * as React from "react";
 import {Image, StyleSheet, View, Pressable, Text, Button} from "react-native";
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from "@react-navigation/native";
+import DiagnoseOverlay from "../components/DiagnoseOverlay";
 
 const LeafScanner = () => {
     const [permission, requestPermission] = useCameraPermissions();
     const navigation = useNavigation();
+    const [isOverlayVisible, setIsOverlayVisible] = React.useState(false);
 
     if (!permission) {
         return <View />;
@@ -33,7 +35,7 @@ const LeafScanner = () => {
             <View style={[styles.scanInner, styles.scanInnerPosition]} />
             
             {/* The Capture Button */}
-            <Pressable style={styles.button} onPress={() => alert("Scanner captured!")}>
+            <Pressable style={styles.button} onPress={() => setIsOverlayVisible(true)}>
                 <View style={[styles.icon, styles.iconLayout]} />
             </Pressable>
             
@@ -53,6 +55,12 @@ const LeafScanner = () => {
                 </Pressable>
                 <Image style={[styles.flashIcon, styles.topHeaderLayout]} resizeMode="cover" />
             </View>
+
+            {/* AI Diagnose Output Modal */}
+            <DiagnoseOverlay 
+                visible={isOverlayVisible} 
+                onClose={() => setIsOverlayVisible(false)} 
+            />
         </View>);
 };
 

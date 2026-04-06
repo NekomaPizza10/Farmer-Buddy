@@ -3,6 +3,7 @@ import { StyleSheet, View, Image, Text, Pressable, TextInput, FlatList, Keyboard
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { sendAgronomistMessage, ChatMessage } from "../services/api/geminiChatService";
+import ChatbotSidebar from "../components/ChatbotSidebar";
 
 type Message = {
     id: string;
@@ -17,6 +18,7 @@ const ChatBotScreen = () => {
     ]);
     const [inputText, setInputText] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
     const handleSend = async () => {
         if (!inputText.trim()) return;
@@ -110,7 +112,7 @@ const ChatBotScreen = () => {
                     </View>
                 </View>
 
-                <Pressable>
+                <Pressable onPress={() => setIsSidebarOpen(true)}>
                     <Ionicons name="list" size={30} color="#4A5D23" />
                 </Pressable>
             </View>
@@ -158,6 +160,14 @@ const ChatBotScreen = () => {
                     </View>
                 </KeyboardAvoidingView>
             </View>
+
+            <ChatbotSidebar 
+                visible={isSidebarOpen} 
+                onClose={() => setIsSidebarOpen(false)} 
+                onNewChat={() => {
+                    setMessages([{ id: '1', text: 'Hi! I am Buddy Assistant. How can I help you regarding your farm today?', sender: 'Buddy' }]);
+                }} 
+            />
         </SafeAreaView>
     );
 };
