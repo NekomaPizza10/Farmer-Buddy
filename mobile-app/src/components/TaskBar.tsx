@@ -15,7 +15,7 @@ const TaskBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
                 let label = route.name;
                 if (route.name === "Dashboard") { iconSource = require("assets/image/Home.png"); label = "Home"; }
                 else if (route.name === "FarmerSensor") { iconSource = require("assets/image/ActSens.png"); label = "Sensor"; }
-                else if (route.name === "Settings") { iconSource = require("assets/image/Profile.png"); label = "Profile"; }
+                else if (route.name === "ChatBot") { iconSource = require("assets/image/chatbot.png"); label = "AI Bot"; }
                 else if (route.name === "BodyCamera") { iconSource = require("assets/image/BodyCam.png"); label = "BodyCam"; }
 
                 const isFocused = state.index === index;

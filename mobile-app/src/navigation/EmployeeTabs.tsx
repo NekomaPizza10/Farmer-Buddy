@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomePage from '../screens/HomePage';
 import FarmerSensorScreen from '../screens/FarmerSensorScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ChatBotScreen from '../screens/ChatBotScreen';
 import BodyCamera from '../screens/BodyCamera';
 import { EmployeeTabParamList } from './types';
 import { Text } from 'react-native';
@@ -67,11 +68,11 @@ export default function EmployeeTabs() {
       />
 
       <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
+        name="ChatBot"
+        component={ChatBotScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20 }}>⚙️</Text>
+            <Text style={{ fontSize: 20 }}>🤖</Text>
           ),
         }}
       />

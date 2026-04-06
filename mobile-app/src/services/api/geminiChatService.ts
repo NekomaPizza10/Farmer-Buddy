@@ -1,5 +1,5 @@
 import { GEMINI_API_KEY } from '@env';
-import { supabase } from './supabase';
+import { supabase } from '../supabase';
 import { Buffer } from 'buffer';
 
 // Primary model

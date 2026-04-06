@@ -12,7 +12,7 @@ export type ManagerTabParamList = {
 export type EmployeeTabParamList = {
   Dashboard: undefined;
   FarmerSensor: undefined;
-  Settings: undefined;
+  ChatBot: undefined;
   BodyCamera: undefined;
 };
 
