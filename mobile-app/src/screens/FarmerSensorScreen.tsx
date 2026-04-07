@@ -7,6 +7,13 @@ const FarmerSensorScreen = () => {
 
 	return (
 		<View style={styles.farmerSensor}>
+			<View style={[styles.topHeader, styles.analyseLayout]}>
+				<Text style={[styles.farmSensorAnalysis, styles.sensorClr]}>Farm Sensor Analysis Data</Text>
+				<Pressable style={[styles.userProfile, styles.analyseLayout]} onPress={() => { navigation.navigate('Settings' as never) }}>
+					<Image style={styles.icon as any} source={require("assets/image/Profile.png")} resizeMode="cover" />
+				</Pressable>
+			</View>
+
 			<View style={[styles.dashcard, styles.dashcardPosition]} />
 			<ScrollView style={styles.farmer1} contentContainerStyle={{ height: 1050, paddingBottom: 150 }}>
 				<View style={styles.topCardParent}>
@@ -17,6 +24,7 @@ const FarmerSensorScreen = () => {
 							<Text style={[styles.text, styles.sensorClr]}>65%</Text>
 							<Text style={styles.moisture2}>Moisture</Text>
 						</View>
+
 						<View style={styles.ph}>
 							<View style={[styles.phChild, styles.childLayout]} />
 							<View style={[styles.phItem, styles.itemLayout1]} />
@@ -32,6 +40,7 @@ const FarmerSensorScreen = () => {
 							<View style={[styles.npkInner, styles.npkPosition]} />
 						</View>
 					</View>
+
 					<View style={[styles.middleCard, styles.cardPosition]}>
 						<View style={[styles.middleCardChild, styles.cardChildPosition]} />
 						<Text style={[styles.npkData, styles.npkDataTypo]}>{`NPK Data `}</Text>
@@ -91,17 +100,14 @@ const FarmerSensorScreen = () => {
 					</View>
 				</View>
 			</ScrollView>
+
+			{/* Floating Buddy Button */}
 			<Pressable style={[styles.buddy, styles.buddyLayout]} onPress={() => { }}>
 				<View style={[styles.buddyChild, styles.buddyLayout]} />
 				<Text style={[styles.buddy2, styles.buddy2Typo]}>Buddy</Text>
-				<Image style={styles.image10Icon} source={require("assets/image/buddySmall.png")} resizeMode="cover" />
+				<Image style={styles.buddyIcon} source={require("assets/image/buddySmall.png")} resizeMode="cover" />
 			</Pressable>
-			<View style={[styles.topHeader, styles.analyseLayout]}>
-				<Text style={[styles.farmSensorAnalysis, styles.sensorClr]}>Farm Sensor Analysis Data</Text>
-				<Pressable style={[styles.userProfile, styles.analyseLayout]} onPress={() => { navigation.navigate('Settings' as never) }}>
-					<Image style={styles.icon as any} source={require("assets/image/FarmerIcon.png")} resizeMode="cover" />
-				</Pressable>
-			</View>
+
 		</View>);
 };
 
@@ -722,7 +728,7 @@ const styles = StyleSheet.create({
 		height: 21,
 		fontWeight: "700"
 	},
-	image10Icon: {
+	buddyIcon: {
 		top: 5,
 		width: 25,
 		height: 25,

@@ -1,222 +1,442 @@
-import * as React from "react";
-import {StyleSheet, View, Image, Text, Pressable} from "react-native";
+import React, { useState, useRef } from "react";
+import { StyleSheet, View, Image, Text, Pressable, Animated, Easing, Modal, ScrollView, SafeAreaView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-const BodyCamera = () => {
+export default function BodyCamera() {
+    const navigation = useNavigation();
+    const [isOn, setIsOn] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    // Animation values
+    const colorAnim = useRef(new Animated.Value(0)).current;
+
+    // Modal scale anim
+    const modalScale = useRef(new Animated.Value(0.8)).current;
+    const modalOpacity = useRef(new Animated.Value(0)).current;
+
+    const openConfirmModal = () => {
+        setShowConfirm(true);
+        Animated.parallel([
+            Animated.timing(modalScale, { toValue: 1, duration: 250, easing: Easing.out(Easing.back(1.5)), useNativeDriver: true }),
+            Animated.timing(modalOpacity, { toValue: 1, duration: 250, useNativeDriver: true })
+        ]).start();
+    };
+
+    const confirmToggle = () => {
+        // close modal
+        Animated.parallel([
+            Animated.timing(modalScale, { toValue: 0.8, duration: 200, useNativeDriver: true }),
+            Animated.timing(modalOpacity, { toValue: 0, duration: 200, useNativeDriver: true })
+        ]).start(() => {
+            setShowConfirm(false);
+
+            // animate button color based on whether we are turning ON or OFF
+            Animated.timing(colorAnim, {
+                toValue: isOn ? 0 : 1, // toggle value
+                duration: 400,
+                useNativeDriver: false
+            }).start(() => setIsOn(!isOn));
+        });
+    };
+
+    const cancelToggle = () => {
+        Animated.parallel([
+            Animated.timing(modalScale, { toValue: 0.8, duration: 200, useNativeDriver: true }),
+            Animated.timing(modalOpacity, { toValue: 0, duration: 200, useNativeDriver: true })
+        ]).start(() => setShowConfirm(false));
+    };
+
+    const buttonColor = colorAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ["#2d4b2a", "#ef4444"] // changes to red when ACTIVE to indicate STOP SHIFT
+    });
+
+    const TeamMemberTag = ({ name, status, iconLetter }: { name: string, status: string, iconLetter: string }) => (
+        <View style={styles.memberCard}>
+            <View style={styles.memberAvatar}>
+                <View style={styles.avatarBg} />
+                <Text style={styles.avatarLetter}>{iconLetter}</Text>
+            </View>
+
+            <View style={styles.memberDetails}>
+                <Text style={styles.memberName}>{name}</Text>
+                <Text style={styles.memberRole}>Field Worker</Text>
+            </View>
+
+            <View style={styles.statusBadge}>
+                <View style={[styles.statusDot, { backgroundColor: status === 'Online' ? '#22c55e' : '#ccc' }]} />
+                <Text style={styles.statusBadgeText}>{status}</Text>
+            </View>
+        </View>
+    );
+
     return (
-        <View style={styles.bodyCamera}>
-            <View style={[styles.dashcard, styles.dashcardPosition]} />
-            <View style={[styles.topHeader, styles.topHeaderLayout]}>
-                <Text style={[styles.bodycamManagement, styles.ahmadTypo]}>BodyCam Management</Text>
-                <Pressable style={[styles.userProfile, styles.topHeaderLayout]} onPress={()=>{}}>
-                    <Image style={styles.icon} resizeMode="cover" />
+        <View style={styles.container}>
+            {/* Top Header */}
+            <View style={styles.topHeader}>
+                <Pressable style={styles.userProfile} onPress={() => { navigation.navigate('Settings' as never) }}>
+                    {/* Profile Icon is meant to be on the far left */}
+                    <Image style={styles.icon} source={require("assets/image/Profile.png")} resizeMode="cover" />
                 </Pressable>
-                <View style={styles.managerAccess}>
-                    <Text style={[styles.managerAccess2, styles.textFlexBox]}>Manager Access</Text>
-                    <View style={styles.managerAccessChild} />
+                <View style={styles.headerTitles}>
+                    <Text style={styles.bodycamManagement}>BodyCam Management</Text>
+                    <View style={styles.managerAccess}>
+                        <Text style={styles.managerAccess2}>Manager Access</Text>
+                    </View>
                 </View>
             </View>
-            <View style={styles.globalParent}>
-                <View style={[styles.global, styles.globalLayout]}>
-                    <Image style={[styles.globalChild, styles.globalLayout]} resizeMode="cover" />
-                    <Pressable style={[styles.startButton, styles.startLayout]} onPress={()=>{}}>
-                        <View style={[styles.startButtonChild, styles.startLayout]} />
-                        <Text style={styles.startShiftPower}>Start Shift (Power Cams ON)</Text>
-                    </Pressable>
-                    <Text style={[styles.globalShiftControl, styles.aFlexBox]}>Global Shift Control</Text>
-                    <Text style={[styles.currentShiftsStatusContainer, styles.textFlexBox]}>
-                        <Text style={styles.currentShiftsStatusContainer2}>
-                            <Text style={styles.currentShiftsStatus}>
-                                <Text style={[styles.currentShiftsStatus2, styles.ahmadTypo]}>{`Current Shifts Status: `}</Text>
+
+            {/* Main Rounded Content Area */}
+            <View style={styles.dashcard}>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+                    {/* Shift Control Card */}
+                    <View style={styles.shiftCard}>
+                        <Text style={styles.cardHeader}>Global Shift Control</Text>
+
+                        <View style={styles.statusRow}>
+                            <Text style={styles.statusLabel}>Current Shifts Status: </Text>
+                            <Text style={[styles.statusValue, { color: isOn ? '#ef4444' : '#1f291e' }]}>
+                                {isOn ? 'Active' : 'Inactive'}
                             </Text>
-                            <Text style={styles.inactiveShiftManagementFor}>
-                                <Text style={styles.currentShiftsStatus}>Inactive{'\n'}</Text>
-                                <Text style={styles.shiftManagementFor}>Shift management for all active body cams.</Text>
-                            </Text>
-                        </Text>
-                    </Text>
-                </View>
-                <Image style={[styles.globalIcon, styles.iconLayout]} resizeMode="cover" />
-                <View style={[styles.dash, styles.dashIconLayout]}>
-                    <View style={[styles.dashChild, styles.dashIconLayout]} />
-                    <View style={[styles.team, styles.teamLayout2]}>
-                        <Image style={styles.teamIcon} resizeMode="cover" />
-                        <Text style={[styles.teamStatus, styles.search2Typo]}>Team Status</Text>
+                        </View>
+
+                        <Text style={styles.statusSubtext}>Shift management for all active body cams.</Text>
+
+                        {/* Animated Pressable Button */}
+                        <Pressable style={styles.customStartButton} onPress={openConfirmModal}>
+                            <Animated.View style={[styles.customStartButtonBg, { backgroundColor: buttonColor }]} />
+                            <Text style={styles.customStartButtonText}>{isOn ? "End Shift (Cams OFF)" : "Start Shift (Power Cams ON)"}</Text>
+                        </Pressable>
                     </View>
-                    <View style={styles.search}>
-                        <Text style={[styles.search2, styles.search2Position]}>Search</Text>
-                        <Image style={[styles.maskGroupIcon, styles.maskGroupIconPosition]} resizeMode="cover" />
+
+                    {/* Search & Team Filter Dash */}
+                    <View style={styles.searchDash}>
+                        <View style={styles.searchDashLeft}>
+                            <Image style={styles.teamFilterIcon} resizeMode="cover" />
+                            <Text style={styles.searchDashText}>Team Status</Text>
+                        </View>
+                        <View style={styles.searchDashRight}>
+                            <Text style={styles.searchDashText}>Search</Text>
+                            <View style={styles.searchIconPlaceholder} />
+                        </View>
                     </View>
-                </View>
+
+                    {/* Team Status List Header */}
+                    <View style={styles.listHeaderRow}>
+                        <Text style={styles.listHeaderTitle}>Team Status</Text>
+                        <Text style={styles.listHeaderActive}> (Active - </Text>
+                        <Text style={styles.listHeaderCount}>3)</Text>
+                    </View>
+
+                    {/* Team Members */}
+                    <TeamMemberTag name="Ahmad" status="Online" iconLetter="A" />
+                    <TeamMemberTag name="Ahmad" status="Online" iconLetter="A" />
+                    <TeamMemberTag name="Ahmad" status="Online" iconLetter="A" />
+
+                    {/* Bottom Padding */}
+                    <View style={{ height: 100 }} />
+                </ScrollView>
             </View>
-            <View style={[styles.team2, styles.teamLayout1]}>
-                <View style={[styles.team3, styles.teamLayout1]}>
-                    <View style={[styles.teamStatusParent, styles.teamLayout]}>
-                        <Text style={[styles.teamStatus2, styles.teamLayout]}>Team Status</Text>
-                        <Text style={[styles.active, styles.teamLayout]}>(Active -</Text>
-                        <Text style={[styles.text, styles.teamLayout]}> 3)</Text>
-                    </View>
-                    <View style={[styles.nametag1, styles.nametagShadowBox]}>
-                        <View style={[styles.nameIcon, styles.dashIconLayout]}>
-                            <View style={[styles.nameIconChild, styles.childPosition]} />
-                            <Image style={styles.nameIconItem} resizeMode="cover" />
-                            <Text style={[styles.a, styles.aFlexBox]}>A</Text>
-                        </View>
-                        <View style={[styles.nameIcon, styles.dashIconLayout]}>
-                            <Pressable style={[styles.nameIconChild, styles.childPosition]} onPress={()=>{}} />
-                            <Image style={styles.nameIconItem} resizeMode="cover" />
-                            <Text style={[styles.a, styles.aFlexBox]}>A</Text>
-                        </View>
-                        <Text style={styles.ahmadFieldWorkerContainer}>
-                            <Text style={[styles.ahmad, styles.ahmadTypo]}>Ahmad{'\n'}</Text>
-                            <Text style={styles.fieldWorker}>Field Worker</Text>
-                        </Text>
-                        <View style={styles.nametag1Child} />
-                        <Image style={[styles.nametag1Item, styles.search2Position]} resizeMode="cover" />
-                        <Text style={[styles.online, styles.onlineTypo]}>Online</Text>
-                    </View>
-                    <View style={[styles.nametag2, styles.dashIconLayout]}>
-                        <View style={[styles.nameIcon, styles.dashIconLayout]}>
-                            <View style={[styles.nameIconChild, styles.childPosition]} />
-                            <Image style={styles.nameIconItem} resizeMode="cover" />
-                            <Text style={[styles.a, styles.aFlexBox]}>A</Text>
-                        </View>
-                        <View style={[styles.nameIcon4, styles.nametagShadowBox]}>
-                            <View style={[styles.nameIconChild, styles.childPosition]} />
-                            <Image style={styles.nameIconItem} resizeMode="cover" />
-                            <Text style={[styles.a, styles.aFlexBox]}>A</Text>
-                        </View>
-                        <Text style={styles.ahmadFieldWorkerContainer}>
-                            <Text style={[styles.ahmad, styles.ahmadTypo]}>Ahmad{'\n'}</Text>
-                            <Text style={styles.fieldWorker}>Field Worker</Text>
-                        </Text>
-                        <View style={styles.nametag1Child} />
-                        <Image style={[styles.nametag1Item, styles.search2Position]} resizeMode="cover" />
-                        <Text style={[styles.online, styles.onlineTypo]}>Online</Text>
-                    </View>
-                    <View style={[styles.nametag3, styles.nametagShadowBox]}>
-                        <View style={[styles.nameIcon, styles.dashIconLayout]}>
-                            <View style={[styles.nameIconChild, styles.childPosition]} />
-                            <Image style={styles.nameIconItem} resizeMode="cover" />
-                            <Text style={[styles.a, styles.aFlexBox]}>A</Text>
-                        </View>
-                        <View style={[styles.nameIcon, styles.dashIconLayout]}>
-                            <View style={[styles.nameIconChild, styles.childPosition]} />
-                            <Image style={styles.nameIconItem} resizeMode="cover" />
-                            <Text style={[styles.a, styles.aFlexBox]}>A</Text>
-                        </View>
-                        <Text style={styles.ahmadFieldWorkerContainer}>
-                            <Text style={[styles.ahmad, styles.ahmadTypo]}>Ahmad{'\n'}</Text>
-                            <Text style={styles.fieldWorker}>Field Worker</Text>
-                        </Text>
-                        <View style={styles.nametag1Child} />
-                        <Image style={[styles.nametag1Item, styles.search2Position]} resizeMode="cover" />
-                        <Text style={[styles.online, styles.onlineTypo]}>Online</Text>
-                    </View>
-                </View>
-            </View>
-            <Pressable style={[styles.buddy, styles.buddyLayout]} onPress={()=>{}}>
+
+            {/* Floating Buddy Button */}
+            <Pressable style={[styles.buddy, styles.buddyLayout]} onPress={() => { }}>
                 <View style={[styles.buddyChild, styles.buddyLayout]} />
-                <Text style={[styles.buddy2, styles.teamLayout]}>Buddy</Text>
-                <Image style={styles.image10Icon} source={require("assets/image/buddySmall.png")} resizeMode="cover" />
+                <Text style={[styles.buddy2, styles.buddy2Typo]}>Buddy</Text>
+                <Image style={styles.buddyIcon} source={require("assets/image/buddySmall.png")} resizeMode="cover" />
             </Pressable>
+            {/* Custom Animated Modal Dialog */}
+            <Modal transparent visible={showConfirm} animationType="none">
+                <View style={styles.modalOverlay}>
+                    <Animated.View style={[styles.modalContent, { opacity: modalOpacity, transform: [{ scale: modalScale }] }]}>
+                        <View style={[styles.modalIconWrapper, { backgroundColor: isOn ? '#fef2f2' : '#e8ece4' }]}>
+                            <Text style={{ fontSize: 32 }}>{isOn ? '🛑' : '📹'}</Text>
+                        </View>
+                        <Text style={styles.modalTitle}>{isOn ? "End Shift" : "Confirm Shift"}</Text>
+                        <Text style={styles.modalDescription}>
+                            {isOn
+                                ? "Are you sure you want to completely deactivate all body cams and end the active shift?"
+                                : "Are you sure you want to activate all field body cameras? This will notify your team."}
+                        </Text>
+
+                        <View style={styles.modalButtonGroup}>
+                            <Pressable style={styles.modalCancel} onPress={cancelToggle}>
+                                <Text style={styles.modalCancelText}>Cancel</Text>
+                            </Pressable>
+                            <Pressable style={[styles.modalConfirm, { backgroundColor: isOn ? '#ef4444' : '#22c55e' }]} onPress={confirmToggle}>
+                                <Text style={styles.modalConfirmText}>{isOn ? "Yes, End Shift" : "Yes, Start"}</Text>
+                            </Pressable>
+                        </View>
+                    </Animated.View>
+                </View>
+            </Modal>
         </View>
     );
 };
-            						
+
 const styles = StyleSheet.create({
-    dashcardPosition: {
-        width: 440,
-        left: 0,
-        position: "absolute"
+    container: {
+        flex: 1,
+        backgroundColor: '#f5f8f2',
     },
-    topHeaderLayout: {
+    topHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 24,
+        paddingTop: 66,
+        paddingBottom: 10,
+    },
+    userProfile: {
+        width: 45,
         height: 45,
-        position: "absolute"
+        borderRadius: 22.5,
+        overflow: 'hidden',
     },
-    ahmadTypo: {
-        fontWeight: "700",
-        fontFamily: "Sansation"
+    icon: {
+        height: "100%",
+        width: "100%",
+        backgroundColor: '#d9d9d9', // Fallback color
     },
-    textFlexBox: {
-        alignItems: "center",
-        display: "flex"
+    headerTitles: {
+        alignItems: 'flex-end',
     },
-    globalLayout: {
-        height: 175,
-        width: 371,
-        left: "50%",
-        position: "absolute"
+    bodycamManagement: {
+        fontSize: 20,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#1f291e',
+        marginBottom: 4,
     },
-    startLayout: {
-        height: 51,
-        width: 281,
-        position: "absolute"
+    managerAccess: {
+        borderWidth: 1,
+        borderColor: '#2d4b2a',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    aFlexBox: {
-        justifyContent: "center",
-        textAlign: "center",
-        alignItems: "center",
-        display: "flex",
-        fontFamily: "Sansation"
+    managerAccess2: {
+        fontSize: 11,
+        fontFamily: 'Sansation',
+        color: '#2d4b2a',
+        textAlign: 'right',
     },
-    iconLayout: {
+    dashcard: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+
+    },
+    scrollContent: {
+        paddingTop: 40,
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+    },
+    shiftCard: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
+        elevation: 6,
+        marginBottom: 25,
+        alignItems: 'center',
+    },
+    cardHeader: {
+        fontSize: 22,
+        color: '#1f291e',
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    statusRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    statusLabel: {
+        fontSize: 16,
+        color: '#555',
+        fontFamily: 'Sansation',
+    },
+    statusValue: {
+        fontSize: 16,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+    },
+    statusSubtext: {
+        fontSize: 14,
+        color: '#777',
+        fontFamily: 'Sansation',
+        marginBottom: 24,
+        textAlign: 'center',
+    },
+    customStartButton: {
+        width: '100%',
+        height: 54,
+        borderRadius: 12,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    customStartButtonBg: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    customStartButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        zIndex: 1,
+    },
+    searchDash: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#e8ece4',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 7,
+        elevation: 4,
+    },
+    searchDashLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    teamFilterIcon: {
         width: 30,
         height: 30,
-        position: "absolute"
-    },
-    dashIconLayout: {
-        height: 76,
-        width: 371,
-        position: "absolute"
-    },
-    teamLayout2: {
-        width: 85,
-        position: "absolute"
-    },
-    search2Typo: {
-        fontSize: 12,
-        justifyContent: "center",
-        textAlign: "center",
-        height: 13,
-        alignItems: "center",
-        display: "flex",
-        color: "#1f291e",
-        fontFamily: "Sansation",
-        left: 0
-    },
-    search2Position: {
-        top: 35,
-        position: "absolute"
-    },
-    maskGroupIconPosition: {
-        left: 4,
-        top: 0
-    },
-    teamLayout1: {
-        height: 285,
-        width: 371,
-        position: "absolute"
-    },
-    teamLayout: {
-        height: 21,
-        position: "absolute"
-    },
-    nametagShadowBox: {
-        elevation: 4,
-        boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.5)",
-        height: 76,
-        width: 371,
-        left: 0,
-        position: "absolute"
-    },
-    childPosition: {
+        backgroundColor: '#d9d9d9',
         borderRadius: 8,
-        top: 0,
-        left: 0
+        marginRight: 10,
     },
-    onlineTypo: {
-        color: "#2d4b2a",
-        fontSize: 11,
+    searchDashText: {
+        fontSize: 14,
+        fontFamily: 'Sansation',
+        color: '#1f291e',
+        fontWeight: 'bold',
+    },
+    searchDashRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    searchIconPlaceholder: {
+        width: 24,
+        height: 24,
+        backgroundColor: '#ccc',
+        borderRadius: 12,
+        marginLeft: 8,
+    },
+    listHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        paddingHorizontal: 4,
+    },
+    listHeaderTitle: {
+        fontSize: 16,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#1f291e',
+    },
+    listHeaderActive: {
+        fontSize: 16,
+        fontFamily: 'Sansation',
+        color: '#1f291e',
+        marginLeft: 8,
+    },
+    listHeaderCount: {
+        fontSize: 16,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#1f291e',
+    },
+    memberCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    memberAvatar: {
+        width: 50,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    avatarBg: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#d9d9d9',
+        borderRadius: 8,
+    },
+    avatarLetter: {
+        fontSize: 24,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#1f291e',
+        zIndex: 1,
+    },
+    memberDetails: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    memberName: {
+        fontSize: 18,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#1f291e',
+        marginBottom: 2,
+    },
+    memberRole: {
+        fontSize: 14,
+        fontFamily: 'Sansation',
+        color: '#666',
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        marginRight: 6,
+    },
+    statusBadgeText: {
+        fontSize: 12,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#2d4b2a',
+    },
+    buddy2Typo: {
+        color: "#fff",
+        fontSize: 15,
         fontFamily: "Sansation",
         position: "absolute"
     },
@@ -225,337 +445,6 @@ const styles = StyleSheet.create({
         width: 104,
         position: "absolute"
     },
-    bodyCamera: {
-        height: 956,
-        backgroundColor: "#f5f8f2",
-        overflow: "hidden",
-        width: "100%"
-    },
-    dashcard: {
-        top: 121,
-        boxShadow: "0px -2px 5px rgba(0, 0, 0, 0.2)",
-        elevation: 5,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        backgroundColor: "#fff",
-        height: 795
-    },
-    topHeader: {
-        top: 66,
-        left: 24,
-        width: 394
-    },
-    bodycamManagement: {
-        top: 4,
-        left: 177,
-        textAlign: "right",
-        color: "#1f291e",
-        fontFamily: "Sansation",
-        fontSize: 20,
-        position: "absolute"
-    },
-    userProfile: {
-        width: 45,
-        top: 0,
-        left: 0
-    },
-    icon: {
-        height: "100%",
-        // @ts-ignore
-        nodeWidth: 45,
-        // @ts-ignore
-        nodeHeight: 45,
-        width: "100%"
-    },
-    managerAccess: {
-        top: 28,
-        left: 306,
-        height: 12,
-        width: 88,
-        position: "absolute"
-    },
-    managerAccess2: {
-        top: 1,
-        left: 2,
-        justifyContent: "flex-end",
-        width: 84,
-        height: 8,
-        color: "#2d4b2a",
-        fontSize: 11,
-        fontFamily: "Sansation",
-        position: "absolute",
-        textAlign: "right"
-    },
-    managerAccessChild: {
-        borderRadius: 4,
-        borderStyle: "solid",
-        borderColor: "#2d4b2a",
-        borderWidth: 1,
-        width: 89,
-        height: 13,
-        top: 0,
-        left: 0,
-        position: "absolute"
-    },
-    globalParent: {
-        marginLeft: -200,
-        top: 140,
-        width: 400,
-        height: 668,
-        left: "50%",
-        position: "absolute",
-        overflow: "hidden"
-    },
-    global: {
-        marginLeft: -185,
-        elevation: 7,
-        boxShadow: "0px 0px 7px rgba(0, 0, 0, 0.8)",
-        top: 20
-    },
-    globalChild: {
-        marginLeft: -185,
-        borderRadius: 16,
-        top: 0
-    },
-    startButton: {
-        top: 103,
-        left: 39
-    },
-    startButtonChild: {
-        borderRadius: 10,
-        backgroundColor: "#2d4b2a",
-        top: 0,
-        left: 0
-    },
-    startShiftPower: {
-        marginLeft: -130,
-        top: 10,
-        width: 262,
-        height: 30,
-        justifyContent: "center",
-        textAlign: "center",
-        color: "#fff",
-        left: "50%",
-        alignItems: "center",
-        display: "flex",
-        fontFamily: "Sansation",
-        fontSize: 20,
-        position: "absolute"
-    },
-    globalShiftControl: {
-        left: 58,
-        width: 181,
-        height: 28,
-        top: 20,
-        color: "#1f291e",
-        fontSize: 20,
-        position: "absolute"
-    },
-    currentShiftsStatusContainer: {
-        top: 61,
-        left: 21,
-        width: 265,
-        height: 34,
-        textAlign: "left",
-        color: "#1f291e",
-        position: "absolute"
-    },
-    currentShiftsStatusContainer2: {
-        width: "100%"
-    },
-    currentShiftsStatus: {
-        fontSize: 14
-    },
-    currentShiftsStatus2: {
-        fontFamily: "Sansation"
-    },
-    inactiveShiftManagementFor: {
-        fontFamily: "Sansation"
-    },
-    shiftManagementFor: {
-        fontSize: 13
-    },
-    globalIcon: {
-        top: 38,
-        left: 33
-    },
-    dash: {
-        top: 222,
-        left: 15,
-        elevation: 7,
-        boxShadow: "0px 0px 7px rgba(0, 0, 0, 0.8)"
-    },
-    dashChild: {
-        backgroundColor: "#e8ece4",
-        borderRadius: 16,
-        top: 0,
-        left: 0
-    },
-    team: {
-        top: 12,
-        left: 62,
-        height: 53
-    },
-    teamIcon: {
-        left: 23,
-        width: 40,
-        height: 40,
-        top: 0,
-        position: "absolute"
-    },
-    teamStatus: {
-        top: 40,
-        width: 85,
-        position: "absolute"
-    },
-    search: {
-        top: 18,
-        left: 245,
-        height: 48,
-        width: 38,
-        position: "absolute"
-    },
-    search2: {
-        width: 38,
-        fontSize: 12,
-        justifyContent: "center",
-        textAlign: "center",
-        height: 13,
-        alignItems: "center",
-        display: "flex",
-        color: "#1f291e",
-        fontFamily: "Sansation",
-        left: 0
-    },
-    maskGroupIcon: {
-        width: 30,
-        height: 30,
-        position: "absolute"
-    },
-    team2: {
-        top: 465,
-        left: 35
-    },
-    team3: {
-        top: 0,
-        left: 0
-    },
-    teamStatusParent: {
-        width: 159,
-        left: 4,
-        top: 0
-    },
-    teamStatus2: {
-        fontSize: 14,
-        justifyContent: "center",
-        textAlign: "center",
-        alignItems: "center",
-        display: "flex",
-        fontFamily: "Sansation",
-        width: 88,
-        top: 0,
-        color: "#1f291e",
-        left: 0
-    },
-    active: {
-        left: 88,
-        width: 53,
-        fontSize: 14,
-        textAlign: "left",
-        alignItems: "center",
-        display: "flex",
-        top: 0,
-        color: "#1f291e",
-        fontFamily: "Sansation"
-    },
-    text: {
-        left: 141,
-        width: 18,
-        fontSize: 14,
-        textAlign: "left",
-        alignItems: "center",
-        display: "flex",
-        top: 0,
-        color: "#1f291e",
-        fontFamily: "Sansation"
-    },
-    nametag1: {
-        top: 21
-    },
-    nameIcon: {
-        top: 0,
-        left: 0
-    },
-    nameIconChild: {
-        backgroundColor: "#d9d9d9",
-        height: 76,
-        width: 371,
-        position: "absolute"
-    },
-    nameIconItem: {
-        top: 13,
-        left: 20,
-        width: 50,
-        height: 50,
-        position: "absolute"
-    },
-    a: {
-        top: 26,
-        left: 34,
-        fontSize: 32,
-        width: 21,
-        height: 24,
-        color: "#1f291e",
-        position: "absolute"
-    },
-    ahmadFieldWorkerContainer: {
-        top: 17,
-        left: 80,
-        width: 105,
-        height: 39,
-        textAlign: "left",
-        color: "#1f291e",
-        position: "absolute"
-    },
-    ahmad: {
-        fontFamily: "Sansation",
-        fontSize: 20
-    },
-    fieldWorker: {
-        fontSize: 16,
-        fontFamily: "Sansation"
-    },
-    nametag1Child: {
-        top: 31,
-        left: 291,
-        backgroundColor: "rgba(34, 197, 94, 0.5)",
-        width: 57,
-        height: 15,
-        borderRadius: 16,
-        position: "absolute"
-    },
-    nametag1Item: {
-        left: 297,
-        width: 6,
-        height: 6
-    },
-    online: {
-        top: 32,
-        left: 309,
-        width: 34,
-        height: 10,
-        textAlign: "left"
-    },
-    nametag2: {
-        top: 115,
-        left: 0
-    },
-    nameIcon4: {
-        top: 0
-    },
-    nametag3: {
-        top: 209
-    },
     buddy: {
         top: 820,
         left: 316
@@ -563,30 +452,104 @@ const styles = StyleSheet.create({
     buddyChild: {
         backgroundColor: "#a25a28",
         borderRadius: 8,
+        height: 37,
+        width: 104,
         top: 0,
         left: 0
     },
     buddy2: {
         top: 7,
         left: 38,
-        fontSize: 15,
-        width: 59,
-        justifyContent: "center",
         textAlign: "center",
-        alignItems: "center",
         display: "flex",
-        fontFamily: "Sansation",
-        color: "#fff",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 59,
         height: 21,
         fontWeight: "700"
     },
-    image10Icon: {
+    buddyIcon: {
         top: 5,
-        left: 13,
         width: 25,
         height: 25,
+        left: 13,
         position: "absolute"
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '85%',
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 24,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 15,
+        elevation: 10,
+    },
+    modalIconWrapper: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#e8ece4',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        color: '#1f291e',
+        marginBottom: 8,
+    },
+    modalDescription: {
+        fontSize: 15,
+        fontFamily: 'Sansation',
+        color: '#555',
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22,
+    },
+    modalButtonGroup: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        gap: 12,
+    },
+    modalCancel: {
+        flex: 1,
+        paddingVertical: 14,
+        borderRadius: 12,
+        backgroundColor: '#f1f1f1',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalCancelText: {
+        color: '#555',
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    modalConfirm: {
+        flex: 1,
+        paddingVertical: 14,
+        borderRadius: 12,
+        backgroundColor: '#22c55e',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalConfirmText: {
+        color: '#fff',
+        fontFamily: 'Sansation',
+        fontWeight: 'bold',
+        fontSize: 16,
     }
 });
-            						
-export default BodyCamera;
