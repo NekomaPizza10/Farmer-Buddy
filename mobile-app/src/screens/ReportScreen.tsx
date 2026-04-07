@@ -1,8 +1,11 @@
 import * as React from "react";
-import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, PanResponder, Animated, Dimensions } from "react-native";
+import {
+	StyleSheet, View, Text, ScrollView, Image,
+	TouchableOpacity, PanResponder, Animated, Dimensions
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const ReportScreen = () => {
 	const navigation = useNavigation();
@@ -13,9 +16,7 @@ const ReportScreen = () => {
 			onStartShouldSetPanResponder: () => true,
 			onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 10,
 			onPanResponderMove: (_, gestureState) => {
-				if (gestureState.dy > 0) {
-					translateY.setValue(gestureState.dy);
-				}
+				if (gestureState.dy > 0) translateY.setValue(gestureState.dy);
 			},
 			onPanResponderRelease: (_, gestureState) => {
 				if (gestureState.dy > 100) {
@@ -34,6 +35,19 @@ const ReportScreen = () => {
 		})
 	).current;
 
+	// Helper to render report items
+	const ReportItem = ({ icon, title, description, type }: any) => (
+		<View style={styles.itemCard}>
+			<Image style={styles.itemIcon} source={icon} resizeMode="contain" />
+			<View style={styles.itemTextContent}>
+				<Text style={[styles.itemTitle, type === 'issue' ? styles.issueText : styles.stepText]}>
+					{title}
+				</Text>
+				<Text style={styles.itemDescription}>{description}</Text>
+			</View>
+		</View>
+	);
+
 	return (
 		<View style={styles.root}>
 			<TouchableOpacity
@@ -42,68 +56,64 @@ const ReportScreen = () => {
 				onPress={() => navigation.goBack()}
 			/>
 			<Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+				{/* Drag Handle Section */}
 				<View {...panResponder.panHandlers} style={styles.dragHandleArea}>
 					<View style={styles.dragHandle} />
 				</View>
-				<View style={styles.analysisReport}>
-					<View style={styles.dashcard} />
-					<View style={[styles.topic, styles.topicPosition]}>
-						<Text style={[styles.title, styles.titlePosition]}>ANALYSIS REPORT</Text>
-						<Text style={[styles.analysisDateText, styles.titleTypo]}>Analysis Date: 11 July 2025</Text>
+
+				<ScrollView
+					style={styles.scrollContainer}
+					showsVerticalScrollIndicator={false}
+					contentContainerStyle={styles.scrollContent}
+				>
+					{/* Header */}
+					<View style={styles.header}>
+						<Text style={styles.mainTitle}>Analysis Report</Text>
+						<Text style={styles.dateText}>Generated: 11 July 2025</Text>
 					</View>
-					<ScrollView style={[styles.container, styles.containerPosition]} contentContainerStyle={{ minHeight: 700 }} showsVerticalScrollIndicator={false}>
-						<ScrollView style={[styles.container2, styles.containerPosition]} contentContainerStyle={{ minHeight: 700 }} horizontal={false}>
-							<View style={styles.reportContent}>
-								<View style={[styles.issuesBackground, styles.backgroundLayout1]} />
-								<View style={[styles.recommendedStepsBackground, styles.backgroundLayout1]} />
-								<View style={[styles.issuesHeader, styles.alertIconLayout]}>
-									<Image style={[styles.alertIcon, styles.alertIconLayout]} source={require("assets/image/AlertIcon.png")} resizeMode="cover" />
-									<Text style={[styles.issuesFoundText, styles.textTypo]}>Issues Found</Text>
-								</View>
-								<View style={[styles.soilMoistureBackground, styles.backgroundLayout]} />
-								<View style={[styles.nitrogenDeficiencyBackground, styles.backgroundLayout]} />
-								<View style={[styles.aphidInfestationBackground, styles.backgroundLayout]} />
-								<View style={[styles.irrigationScheduleBackground, styles.backgroundLayout]} />
-								<View style={[styles.nFertilizerBackground, styles.backgroundLayout]} />
-								<View style={[styles.fieldSpotCheckBackground, styles.backgroundLayout]} />
-								<Image style={[styles.dehydrationIcon, styles.iconLayout]} source={require("assets/image/DehydrationIcon.png")} resizeMode="cover" />
-								<Image style={[styles.lowNIcon, styles.iconLayout]} source={require("assets/image/LowNIcon.png")} resizeMode="cover" />
-								<Image style={[styles.bugIcon, styles.iconLayout]} source={require("assets/image/BugIcon.png")} resizeMode="cover" />
-								<View style={styles.stepsHeader}>
-									<Text style={[styles.recommendedStepsText, styles.textTypo]}>Recommended Steps</Text>
-									<Image style={[styles.solutionIcon, styles.titlePosition]} source={require("assets/image/SolutionIcon.png")} resizeMode="cover" />
-								</View>
-								<Image style={[styles.wateringIcon, styles.iconLayout]} source={require("assets/image/WateringIcon.png")} resizeMode="cover" />
-								<Image style={[styles.fertilizerIcon, styles.iconLayout]} source={require("assets/image/FertilizerIcon.png")} resizeMode="cover" />
-								<Image style={[styles.searchIcon, styles.iconLayout]} source={require("assets/image/SearchIcon.png")} resizeMode="cover" />
-								<Text style={[styles.soilMoistureTextContainer, styles.textContainerLayout]}>
-									<Text style={styles.soilMoistureLowbelow}>Soil Moisture: Low(Below Threshold){'\n'}</Text>
-									<Text style={styles.currentLevelOf}>{`Current level of 65% is marginally low for [Crop Type Bla bla bla bla bla `}</Text>
-								</Text>
-								<Text style={[styles.nitrogenDeficiencyTextContainer, styles.textContainerLayout]}>
-									<Text style={styles.soilMoistureLowbelow}>NPK Content: Nitrogen Deficiency{'\n'}</Text>
-									<Text style={styles.currentLevelOf}>{`Current level of 65% is marginally low for [Crop Type Bla bla bla bla bla `}</Text>
-								</Text>
-								<Text style={[styles.aphidInfestationTextContainer, styles.textContainerLayout]}>
-									<Text style={styles.soilMoistureLowbelow}>Observation Note: Potential Aphid Infestation{'\n'}</Text>
-									<Text style={styles.currentLevelOf}>{`Current level of 65% is marginally low for [Crop Type Bla bla bla bla bla `}</Text>
-								</Text>
-								<Text style={[styles.irrigationScheduleTextContainer, styles.textContainerPosition]}>
-									<Text style={styles.soilMoistureLowbelow}>1.Adjust Irrigation Schedule{'\n'}</Text>
-									<Text style={styles.currentLevelOf}>{`Current level of 65% is marginally low for [Crop Type Bla bla bla bla bla `}</Text>
-								</Text>
-								<Text style={[styles.nFertilizerText, styles.textContainerPosition]}>
-									<Text style={styles.soilMoistureLowbelow}>2.Apply Balanced N-Fertilizer{'\n'}</Text>
-									<Text style={styles.currentLevelOf}>{`Current level of 65% is marginally low for [Crop Type Bla bla bla bla bla `}</Text>
-								</Text>
-								<Text style={[styles.fieldSpotCheckContainer, styles.textContainerPosition]}>
-									<Text style={styles.soilMoistureLowbelow}>3.Conduct Field Spot Check{'\n'}</Text>
-									<Text style={styles.currentLevelOf}>{`Current level of 65% is marginally low for [Crop Type Bla bla bla bla bla `}</Text>
-								</Text>
-							</View>
-						</ScrollView>
-					</ScrollView>
-				</View>
+
+					{/* Section: Issues */}
+					<View style={styles.sectionContainer}>
+						<View style={styles.sectionHeader}>
+							<Image style={styles.headerIcon} source={require("assets/image/Warning.png")} />
+							<Text style={styles.sectionTitle}>Critical Issues</Text>
+						</View>
+
+						<ReportItem
+							type="issue"
+							icon={require("assets/image/DehydrationIcon.png")}
+							title="Soil Moisture: Low"
+							description="Current level of 65% is marginally low for Corn. Increase irrigation immediately."
+						/>
+						<ReportItem
+							type="issue"
+							icon={require("assets/image/LowNIcon.png")}
+							title="Nitrogen Deficiency"
+							description="Low NPK levels detected. Leaf yellowing is likely starting at the base."
+						/>
+					</View>
+
+					{/* Section: Steps */}
+					<View style={[styles.sectionContainer, styles.stepsContainer]}>
+						<View style={styles.sectionHeader}>
+							<Image style={styles.headerIcon} source={require("assets/image/SolutionIcon.png")} />
+							<Text style={styles.sectionTitle}>Action Plan</Text>
+						</View>
+
+						<ReportItem
+							type="step"
+							icon={require("assets/image/WateringIcon.png")}
+							title="1. Adjust Irrigation"
+							description="Schedule extra 20 mins of watering during early morning hours."
+						/>
+						<ReportItem
+							type="step"
+							icon={require("assets/image/FertilizerIcon.png")}
+							title="2. Apply N-Fertilizer"
+							description="Use a balanced 10-10-10 mix to stabilize Nitrogen levels."
+						/>
+					</View>
+				</ScrollView>
 			</Animated.View>
 		</View>
 	);
@@ -112,254 +122,115 @@ const ReportScreen = () => {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
-		justifyContent: "flex-end",
+		backgroundColor: 'transparent',
 	},
 	backdrop: {
 		...StyleSheet.absoluteFillObject,
-		backgroundColor: "rgba(0,0,0,0.45)",
+		backgroundColor: "rgba(0,0,0,0.6)",
 	},
 	sheet: {
-		alignItems: "center",
-		width: "100%"
+		backgroundColor: "#F9FBF9", // Very light green/white
+		borderTopLeftRadius: 30,
+		borderTopRightRadius: 30,
+		height: SCREEN_HEIGHT * 0.85,
+		width: SCREEN_WIDTH,
+		marginTop: SCREEN_HEIGHT * 0.15,
 	},
 	dragHandleArea: {
 		alignItems: "center",
-		paddingVertical: 12,
-		width: "100%",
-		zIndex: 10,
+		paddingVertical: 15,
 	},
 	dragHandle: {
-		width: 44,
-		height: 5,
+		width: 50,
+		height: 6,
 		borderRadius: 3,
-		backgroundColor: "#e8ece4",
+		backgroundColor: "#D1D5DB",
 	},
-	topicPosition: {
-		width: 220,
-		left: "50%",
-		marginLeft: -110
-	},
-	titlePosition: {
-		height: 23,
-		top: 0,
-		position: "absolute"
-	},
-	titleTypo: {
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation"
-	},
-	containerPosition: {
-		maxWidth: 400,
+	scrollContainer: {
 		flex: 1,
-		width: 400,
-		marginLeft: -200,
-		left: "50%",
-		position: "absolute"
 	},
-	backgroundLayout1: {
-		height: 330,
-		backgroundColor: "#d9d9d9",
-		borderRadius: 16,
-		marginLeft: -181,
-		width: 363,
-		left: "50%",
-		position: "absolute"
+	scrollContent: {
+		paddingHorizontal: 20,
+		paddingBottom: 40,
 	},
-	alertIconLayout: {
-		height: 24,
-		position: "absolute"
+	header: {
+		marginBottom: 25,
+		alignItems: 'center'
 	},
-	textTypo: {
-		fontSize: 16,
-		top: 3,
-		textAlign: "left",
-		color: "#1f291e",
+	mainTitle: {
+		fontSize: 26,
+		fontWeight: "bold",
+		color: "#1F2937",
 		fontFamily: "Sansation",
-		position: "absolute"
 	},
-	backgroundLayout: {
-		height: 78,
-		width: 321,
-		borderRadius: 8,
-		left: 19,
-		backgroundColor: "#fff",
-		position: "absolute"
-	},
-	iconLayout: {
-		height: 28,
-		width: 28,
-		left: 30,
-		position: "absolute"
-	},
-	textContainerLayout: {
-		height: 63,
-		width: 264,
-		color: "#041438",
-		left: 70,
-		textAlign: "left",
-		position: "absolute"
-	},
-	textContainerPosition: {
-		left: 67,
-		height: 63,
-		width: 264,
-		textAlign: "left",
-		color: "#1f291e",
-		position: "absolute"
-	},
-	analysisReport: {
-		width: 440,
-		height: 795,
-		alignSelf: "center",
-	},
-	dashcard: {
-		elevation: 5,
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-		width: 440,
-		backgroundColor: "#fff",
-		left: 0,
-		top: 0,
-		position: "absolute",
-		height: 795
-	},
-	topic: {
-		top: 29,
-		height: 49,
-		position: "absolute"
-	},
-	title: {
-		fontSize: 24,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		width: 220,
-		left: "50%",
-		marginLeft: -110
-	},
-	analysisDateText: {
-		top: 34,
-		left: 22,
+	dateText: {
 		fontSize: 14,
-		width: 169,
-		height: 15,
-		position: "absolute"
+		color: "#6B7280",
+		marginTop: 4,
 	},
-	container: {
-		top: 82
+	sectionContainer: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 20,
+		padding: 16,
+		marginBottom: 20,
+		// Shadow for iOS
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 8,
+		// Elevation for Android
+		elevation: 3,
 	},
-	container2: {
-		top: 0
+	stepsContainer: {
+		borderLeftWidth: 4,
+		borderLeftColor: "#2D4B2A",
 	},
-	reportContent: {
-		marginLeft: -182,
-		top: 24,
-		height: 681,
-		width: 363,
-		left: "50%",
-		position: "absolute"
+	sectionHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 15,
+		borderBottomWidth: 1,
+		borderBottomColor: "#F3F4F6",
+		paddingBottom: 10,
 	},
-	issuesBackground: {
-		top: 0
-	},
-	recommendedStepsBackground: {
-		top: 351
-	},
-	issuesHeader: {
-		top: 18,
-		left: 17,
-		width: 130
-	},
-	alertIcon: {
+	headerIcon: {
 		width: 24,
-		left: 0,
-		top: 0
+		height: 24,
+		marginRight: 10,
 	},
-	issuesFoundText: {
-		left: 32,
-		width: 99,
-		height: 17
-	},
-	soilMoistureBackground: {
-		top: 52
-	},
-	nitrogenDeficiencyBackground: {
-		top: 138
-	},
-	aphidInfestationBackground: {
-		top: 225
-	},
-	irrigationScheduleBackground: {
-		top: 405
-	},
-	nFertilizerBackground: {
-		top: 491
-	},
-	fieldSpotCheckBackground: {
-		top: 578
-	},
-	dehydrationIcon: {
-		top: 59
-	},
-	lowNIcon: {
-		top: 147
-	},
-	bugIcon: {
-		top: 232
-	},
-	stepsHeader: {
-		top: 370,
-		width: 198,
-		left: 19,
-		height: 23,
-		position: "absolute"
-	},
-	recommendedStepsText: {
-		left: 31,
-		width: 167,
-		height: 18
-	},
-	solutionIcon: {
-		width: 23,
-		left: 0
-	},
-	wateringIcon: {
-		top: 413
-	},
-	fertilizerIcon: {
-		top: 502
-	},
-	searchIcon: {
-		top: 586
-	},
-	soilMoistureTextContainer: {
-		top: 59
-	},
-	soilMoistureLowbelow: {
-		fontSize: 15,
+	sectionTitle: {
+		fontSize: 18,
 		fontWeight: "700",
-		fontFamily: "Sansation"
+		color: "#374151",
 	},
-	currentLevelOf: {
-		fontSize: 13,
-		fontFamily: "Sansation"
+	itemCard: {
+		flexDirection: "row",
+		marginBottom: 20,
 	},
-	nitrogenDeficiencyTextContainer: {
-		top: 146
+	itemIcon: {
+		width: 35,
+		height: 35,
+		marginRight: 15,
 	},
-	aphidInfestationTextContainer: {
-		top: 232
+	itemTextContent: {
+		flex: 1,
 	},
-	irrigationScheduleTextContainer: {
-		top: 413
+	itemTitle: {
+		fontSize: 16,
+		fontWeight: "700",
+		marginBottom: 2,
 	},
-	nFertilizerText: {
-		top: 501
+	issueText: {
+		color: "#B91C1C", // Reddish for issues
 	},
-	fieldSpotCheckContainer: {
-		top: 586
-	}
+	stepText: {
+		color: "#2D4B2A", // Green for steps
+	},
+	itemDescription: {
+		fontSize: 14,
+		color: "#4B5563",
+		lineHeight: 20,
+	},
 });
 
 export default ReportScreen;

@@ -1,9 +1,11 @@
 import * as React from "react";
-import { StyleSheet, View, Image, Text, Pressable, TextInput, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Image, Text, Pressable, TextInput, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator, Dimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { sendAgronomistMessage, ChatMessage } from "../services/api/geminiChatService";
 import ChatbotSidebar from "../components/ChatbotSidebar";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type Message = {
     id: string;
@@ -22,38 +24,35 @@ const ChatBotScreen = () => {
 
     const handleSend = async () => {
         if (!inputText.trim()) return;
-        
+
         const userText = inputText.trim();
         const newUserMsg: Message = { id: Date.now().toString(), text: userText, sender: 'User' };
-        
-        // Add user message to UI
+
         setMessages(prev => [...prev, newUserMsg]);
         setInputText('');
         setIsLoading(true);
 
         try {
-            // Map current UI messages to backend format
             const history: ChatMessage[] = messages.map(m => ({
                 id: m.id,
                 text: m.text,
                 sender: m.sender === 'User' ? 'user' : 'bot'
             }));
 
-            // Call real backend API
             const aiResponseText = await sendAgronomistMessage(userText, history);
-            
-            const newAiMsg: Message = { 
-                id: (Date.now() + 1).toString(), 
-                text: aiResponseText, 
-                sender: 'Buddy' 
+
+            const newAiMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                text: aiResponseText,
+                sender: 'Buddy'
             };
             setMessages(prev => [...prev, newAiMsg]);
         } catch (error) {
             console.error("Gemini Error:", error);
-            const errorMsg: Message = { 
-                id: (Date.now() + 1).toString(), 
-                text: "Sorry, I am having trouble connecting right now. Please try again later.", 
-                sender: 'Buddy' 
+            const errorMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                text: "Sorry, I am having trouble connecting right now.",
+                sender: 'Buddy'
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
@@ -64,61 +63,58 @@ const ChatBotScreen = () => {
     const renderMessage = ({ item }: { item: Message }) => {
         const isUser = item.sender === 'User';
         return (
-            <View style={styles.messageRow}>
-                {isUser ? (
-                    <View style={styles.userContainer}>
-                        <View style={styles.senderHeaderUser}>
-                            <Text style={styles.senderName}>User</Text>
-                            <View style={styles.avatarWrapper}>
-                                <Image source={require('assets/image/Profile.png')} style={styles.avatarIcon} resizeMode="cover" />
-                            </View>
+            <View style={isUser ? styles.userChatWrapper : styles.buddyChatWrapper}>
+                <View style={isUser ? styles.userHeaderRow : styles.buddyHeaderRow}>
+                    {!isUser && (
+                        <View style={styles.iconCircle}>
+                            <Image source={require('assets/image/buddySmall.png')} style={styles.iconImg} resizeMode="contain" />
                         </View>
-                        <View style={[styles.messageBubble, styles.userBubble]}>
-                            <Text style={styles.messageText}>{item.text}</Text>
+                    )}
+                    <Text style={styles.senderLabel}>{isUser ? "User" : "Buddy"}</Text>
+                    {isUser && (
+                        <View style={styles.iconCircle}>
+                            <Image source={require('assets/image/Profile.png')} style={styles.iconImg} resizeMode="cover" />
                         </View>
-                    </View>
-                ) : (
-                    <View style={styles.buddyContainer}>
-                        <View style={styles.senderHeaderBuddy}>
-                            <View style={styles.avatarWrapperBuddy}>
-                                <Image source={require('assets/image/buddySmall.png')} style={styles.avatarIcon} resizeMode="contain" />
-                            </View>
-                            <Text style={styles.senderName}>Buddy</Text>
-                        </View>
-                        <View style={[styles.messageBubble, styles.buddyBubble]}>
-                            <Text style={styles.messageText}>{item.text}</Text>
-                        </View>
-                    </View>
-                )}
+                    )}
+                </View>
+                <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.buddyBubble]}>
+                    <Text style={styles.messageText}>{item.text}</Text>
+                </View>
             </View>
         );
     };
 
     return (
-        <SafeAreaView style={styles.chatbot}>
-            {/* Top Header */}
-            <View style={styles.chatBotHeader}>
+        <View style={styles.container}>
+            {/* 1. Background Dashboard Color */}
+            <View style={[styles.dashboard, styles.dashboardPosition]} />
+
+            {/* 2. Top Header Section */}
+            <View style={[styles.topHeaeder, styles.topHeaederLayout]}>
                 <Pressable style={styles.userProfile} onPress={() => navigation.navigate('Settings' as never)}>
-                    <Image source={require('assets/image/Profile.png')} style={styles.headerProfileIcon} resizeMode="cover" />
+                    <Image style={styles.profileIcon} source={require('assets/image/Profile.png')} resizeMode="cover" />
                 </Pressable>
-                
+
                 <View style={styles.headerCenter}>
-                    <View style={styles.headerBuddyIconBg}>
-                        <Image source={require('assets/image/buddySmall.png')} style={styles.headerBuddyIcon} resizeMode="contain" />
+                    <View style={styles.buddyCircleHeader}>
+                        <Image source={require('assets/image/buddySmall.png')} style={styles.buddyIconSmall} />
                     </View>
-                    <View style={styles.headerBuddyTextContainer}>
-                        <Text style={styles.buddy3}>Buddy</Text>
-                        <Text style={styles.assistant}>Assistant</Text>
+                    <View style={styles.headerTextCol}>
+                        <Text style={styles.buddyTitle}>Buddy</Text>
+                        <Text style={styles.assistantSub}>Assistant</Text>
                     </View>
                 </View>
 
                 <Pressable onPress={() => setIsSidebarOpen(true)}>
-                    <Ionicons name="list" size={30} color="#4A5D23" />
+                    <Ionicons name="list" size={28} color="#1f291e" />
                 </Pressable>
             </View>
-            
-            {/* Main Area */}
-            <View style={styles.dashcard}>
+
+            {/* 3. Main Dashcard */}
+            <View style={styles.dashcard} />
+
+            {/* 4. Chat Content */}
+            <View style={styles.contentContainer}>
                 <FlatList
                     data={messages}
                     keyExtractor={item => item.id}
@@ -126,34 +122,25 @@ const ChatBotScreen = () => {
                     contentContainerStyle={styles.chatList}
                     showsVerticalScrollIndicator={false}
                 />
-                
+
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-                    <View style={styles.bottomArea}>
-                        <View style={styles.messageBot}>
+                    <View style={styles.inputAreaBackground}>
+                        <View style={styles.messageBotContainer}>
                             <TextInput
                                 style={styles.textInput}
                                 placeholder="Ask Buddy"
                                 placeholderTextColor="rgba(0, 0, 0, 0.5)"
                                 value={inputText}
                                 onChangeText={setInputText}
-                                onSubmitEditing={handleSend}
                                 multiline
                             />
-                            <View style={styles.bottomIconsRow}>
-                                <View style={styles.leftIcons}>
-                                    <Pressable>
-                                        <Ionicons name="add" size={24} color="#4A5D23" style={styles.iconStyle} />
-                                    </Pressable>
-                                    <Pressable>
-                                        <Ionicons name="mic" size={22} color="#4A5D23" style={[styles.iconStyle, {marginLeft: 15}]} />
-                                    </Pressable>
+                            <View style={styles.inputActionsRow}>
+                                <View style={styles.leftActions}>
+                                    <Ionicons name="add" size={22} color="#4A5D23" />
+                                    <Ionicons name="mic" size={20} color="#4A5D23" style={{ marginLeft: 15 }} />
                                 </View>
                                 <Pressable onPress={handleSend} disabled={isLoading}>
-                                    {isLoading ? (
-                                        <ActivityIndicator size="small" color="#4A5D23" style={styles.iconStyle} />
-                                    ) : (
-                                        <Ionicons name="send" size={22} color="#4A5D23" style={styles.iconStyle} />
-                                    )}
+                                    {isLoading ? <ActivityIndicator size="small" color="#4A5D23" /> : <Ionicons name="send" size={20} color="#4A5D23" />}
                                 </Pressable>
                             </View>
                         </View>
@@ -161,173 +148,76 @@ const ChatBotScreen = () => {
                 </KeyboardAvoidingView>
             </View>
 
-            <ChatbotSidebar 
-                visible={isSidebarOpen} 
-                onClose={() => setIsSidebarOpen(false)} 
-                onNewChat={() => {
-                    setMessages([{ id: '1', text: 'Hi! I am Buddy Assistant. How can I help you regarding your farm today?', sender: 'Buddy' }]);
-                }} 
+            <ChatbotSidebar
+                visible={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                onNewChat={() => setMessages([{ id: '1', text: 'Hi! I am Buddy Assistant. How can I help you regarding your farm today?', sender: 'Buddy' }])}
             />
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    chatbot: {
-        flex: 1,
-        backgroundColor: "#f5f8f2",
-    },
-    chatBotHeader: {
+    container: { flex: 1, backgroundColor: "#f5f8f2" },
+    dashboardPosition: { width: '100%', left: 0, position: "absolute" },
+    dashboard: { backgroundColor: "#f5f8f2", height: 300, top: 0 },
+
+    topHeaeder: {
+        top: 60,
+        paddingHorizontal: 25,
+        width: '100%',
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingTop: 10,
-        paddingBottom: 15,
-        height: 70,
-    },
-    userProfile: {
-        width: 45,
-        height: 45,
-        borderRadius: 22.5,
-        backgroundColor: '#e6e6e6',
-        justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'hidden',
+        position: 'absolute',
+        zIndex: 10,
     },
-    headerProfileIcon: {
-        width: 45,
-        height: 45,
-        opacity: 0.5,
-    },
-    headerCenter: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    headerBuddyIconBg: {
-        width: 45,
-        height: 45,
-        borderRadius: 22.5,
-        backgroundColor: '#e8ece4',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    headerBuddyIcon: {
-        width: 33,
-        height: 33,
-    },
-    headerBuddyTextContainer: {
-        justifyContent: 'center',
-    },
-    buddy3: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: "#000",
-        fontFamily: "Sansation",
-    },
-    assistant: {
-        fontSize: 15,
-        color: "rgba(0, 0, 0, 0.7)",
-        fontFamily: "Sansation",
-        marginTop: -3,
-    },
+    topHeaederLayout: { height: 50 },
+    userProfile: { width: 45, height: 45 },
+    profileIcon: { height: 45, width: 45, borderRadius: 22.5, backgroundColor: '#e0e0e0' },
+    headerCenter: { flexDirection: 'row', alignItems: 'center' },
+    buddyCircleHeader: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e8ece4', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+    buddyIconSmall: { width: 24, height: 24 },
+    headerTextCol: { justifyContent: 'center' },
+    buddyTitle: { fontSize: 16, fontWeight: '700', color: '#000', fontFamily: 'Sansation' },
+    assistantSub: { fontSize: 12, color: 'rgba(0,0,0,0.6)', marginTop: -2, fontFamily: 'Sansation' },
+
     dashcard: {
-        flex: 1,
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 25,
-        borderTopRightRadius: 25,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 5,
-        elevation: 10,
-        overflow: 'hidden',
-    },
-    chatList: {
-        padding: 20,
-        paddingTop: 30,
-        paddingBottom: 20,
-    },
-    messageRow: {
-        marginBottom: 25,
-    },
-    userContainer: {
-        alignItems: 'flex-end',
-        width: '100%',
-    },
-    buddyContainer: {
-        alignItems: 'flex-start',
-        width: '100%',
-    },
-    senderHeaderBuddy: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-        marginLeft: 15,
-    },
-    senderHeaderUser: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        marginBottom: 8,
-        marginRight: 15,
-    },
-    avatarWrapper: {
-        width: 25,
-        height: 25,
-        borderRadius: 12.5,
-        backgroundColor: '#e6e6e6',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-        marginLeft: 10,
-    },
-    avatarWrapperBuddy: {
-        width: 25,
-        height: 25,
-        borderRadius: 12.5,
-        backgroundColor: '#e8ece4',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-    },
-    avatarIcon: {
-        width: '100%',
+        top: 130,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
         height: '100%',
+        backgroundColor: "#fff",
+        elevation: 10,
+        width: SCREEN_WIDTH,
+        position: "absolute",
     },
-    senderName: {
-        fontSize: 13,
-        color: "#000",
-        fontFamily: "Sansation",
-    },
-    messageBubble: {
-        width: '95%',
-        minHeight: 140,
-        padding: 15,
-        borderRadius: 16,
-    },
-    userBubble: {
-        backgroundColor: "#d4f0ff",
-        alignSelf: 'center',
-    },
-    buddyBubble: {
-        backgroundColor: "#d9d9d9",
-        alignSelf: 'center',
-    },
-    messageText: {
-        fontSize: 14,
-        color: "#333",
-    },
-    bottomArea: {
-        backgroundColor: "rgba(217, 217, 217, 0.25)",
+
+    contentContainer: { flex: 1, marginTop: 140 },
+    chatList: { padding: 20, paddingBottom: 150 },
+    buddyChatWrapper: { marginBottom: 25, alignItems: 'flex-start' },
+    userChatWrapper: { marginBottom: 25, alignItems: 'flex-end' },
+    buddyHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, marginLeft: 10 },
+    userHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, marginRight: 10 },
+    iconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#e8ece4', justifyContent: 'center', alignItems: 'center', marginHorizontal: 8 },
+    iconImg: { width: '100%', height: '100%', borderRadius: 15 },
+    senderLabel: { fontSize: 13, fontFamily: 'Sansation', color: '#000' },
+    messageBubble: { width: '92%', minHeight: 120, borderRadius: 20, padding: 18 },
+    buddyBubble: { backgroundColor: "#d9d9d9" },
+    userBubble: { backgroundColor: "#d4f0ff" },
+    messageText: { fontSize: 14, lineHeight: 20, color: '#333', fontFamily: 'Sansation' },
+
+    // --- Fixed Position ---
+    inputAreaBackground: {
+        backgroundColor: "rgba(217, 217, 217, 0.33)",
         paddingHorizontal: 20,
         paddingTop: 15,
-        paddingBottom: 115, 
+        // Increased padding to push container above the navigation bar
+        paddingBottom: Platform.OS === 'ios' ? 110 : 95,
+        borderTopLeftRadius: 25,
+        borderTopRightRadius: 25,
     },
-    messageBot: {
+    messageBotContainer: {
         minHeight: 82,
         backgroundColor: "#fff",
         borderWidth: 1,
@@ -335,33 +225,16 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 15,
         justifyContent: 'space-between',
+        elevation: 4,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowRadius: 4,
     },
-    textInput: {
-        flex: 1,
-        fontSize: 14,
-        fontFamily: "Sansation",
-        color: "#000",
-        minHeight: 30,
-        textAlignVertical: 'top',
-    },
-    bottomIconsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        marginTop: 5,
-    },
-    leftIcons: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    iconStyle: {
-        opacity: 0.8,
-    }
+    textInput: { flex: 1, fontSize: 14, fontFamily: "Sansation", color: "#000", textAlignVertical: 'top' },
+    inputActionsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+    leftActions: { flexDirection: 'row', alignItems: 'center' },
+    locationClr: { color: "#1f291e" }
 });
 
 export default ChatBotScreen;

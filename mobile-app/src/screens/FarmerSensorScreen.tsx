@@ -1,765 +1,355 @@
 import * as React from "react";
-import { StyleSheet, View, ScrollView, Text, Image, Pressable } from "react-native";
+import {
+    StyleSheet, View, ScrollView, Text, Image,
+    Pressable, Dimensions, TextInput, KeyboardAvoidingView, Platform, Modal, FlatList, TouchableOpacity
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// --- Dropdown Choices ---
+const FARM_TYPES = [
+    "Open-Field Row Crops (Grains, Oilseeds)",
+    "Permanent Crops (Orchards, Vineyards, Berries)",
+    "Greenhouse / High-Tunnel Production",
+    "Indoor Vertical / Hydroponic Farming",
+    "Specialty Horticulture (Vegetables, Flowers, Nursery)",
+    "Agroforestry (Mixed Trees & Crops)"
+];
+
+const GROWTH_STAGES = [
+    "Sowing / Planting",
+    "Seedling / Early Growth",
+    "Vegetative (Leaf & Stem growth)",
+    "Flowering / Reproductive",
+    "Fruit / Grain Filling",
+    "Maturing / Ready for Harvest"
+];
+
+const SOIL_TYPES = [
+    "Sandy Soil",
+    "Loamy Soil",
+    "Clayey Soil",
+    "Silty Soil",
+    "Peaty Soil",
+    "Chalky Soil"
+];
 
 const FarmerSensorScreen = () => {
-	const navigation = useNavigation();
+    const navigation = useNavigation();
 
-	return (
-		<View style={styles.farmerSensor}>
-			<View style={[styles.topHeader, styles.analyseLayout]}>
-				<Text style={[styles.farmSensorAnalysis, styles.sensorClr]}>Farm Sensor Analysis Data</Text>
-				<Pressable style={[styles.userProfile, styles.analyseLayout]} onPress={() => { navigation.navigate('Settings' as never) }}>
-					<Image style={styles.icon as any} source={require("assets/image/Profile.png")} resizeMode="cover" />
-				</Pressable>
-			</View>
+    // --- State ---
+    const [cropType, setCropType] = React.useState("Corn (Maize)");
+    const [observation, setObservation] = React.useState("");
+    const [isBuddyOpen, setIsBuddyOpen] = React.useState(false);
+    const [farmType, setFarmType] = React.useState(FARM_TYPES[0]);
+    const [growthStage, setGrowthStage] = React.useState(GROWTH_STAGES[3]);
+    const [soilType, setSoilType] = React.useState(SOIL_TYPES[1]);
+    const [activeModal, setActiveModal] = React.useState<"farm" | "growth" | "soil" | null>(null);
 
-			<View style={[styles.dashcard, styles.dashcardPosition]} />
-			<ScrollView style={styles.farmer1} contentContainerStyle={{ height: 1050, paddingBottom: 150 }}>
-				<View style={styles.topCardParent}>
-					<View style={[styles.topCard, styles.cardPosition]}>
-						<View style={[styles.topCardChild, styles.cardChildPosition]} />
-						<View style={[styles.moisture, styles.moistureLayout]}>
-							<Image style={[styles.eclipseIcon, styles.moistureLayout]} source={require("assets/image/AnalyzeIcon.png")} resizeMode="cover" />
-							<Text style={[styles.text, styles.sensorClr]}>65%</Text>
-							<Text style={styles.moisture2}>Moisture</Text>
-						</View>
+    // Reuseable Components
+    const SelectionModal = ({ visible, title, items, onSelect, onClose }: any) => (
+        <Modal transparent visible={visible} animationType="fade">
+            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>{title}</Text>
+                    <FlatList
+                        data={items}
+                        keyExtractor={(item) => item}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={styles.modalItem}
+                                onPress={() => { onSelect(item); onClose(); }}
+                            >
+                                <Text style={styles.modalItemText}>{item}</Text>
+                            </TouchableOpacity>
+                        )}
+                        ItemSeparatorComponent={() => <View style={styles.modalSeparator} />}
+                    />
+                </View>
+            </TouchableOpacity>
+        </Modal>
+    );
 
-						<View style={styles.ph}>
-							<View style={[styles.phChild, styles.childLayout]} />
-							<View style={[styles.phItem, styles.itemLayout1]} />
-							<Text style={[styles.ph2, styles.ph2Typo]}>pH</Text>
-							<Text style={styles.optimal}>Optimal</Text>
-							<Text style={[styles.text2, styles.ph2Typo]}>6.5</Text>
-						</View>
-						<View style={styles.npk}>
-							<View style={[styles.npkChild, styles.npkPosition]} />
-							<View style={[styles.npkItem, styles.npkPosition]} />
-							<Text style={[styles.npk2, styles.sensorClr]}>NPK</Text>
-							<Text style={[styles.target, styles.sensorClr]}>Target</Text>
-							<View style={[styles.npkInner, styles.npkPosition]} />
-						</View>
-					</View>
+    const NPKDetail = ({ label, value, status, color, description }: any) => (
+        <View style={styles.npkDetailCard}>
+            <View style={styles.npkHeaderRow}>
+                <Text style={styles.npkLabelText}>{label}</Text>
+                <View style={[{ backgroundColor: color + '20', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 12 }] as any}>
+                    <Text style={[styles.statusPillText, { color: color }]}>{status}</Text>
+                </View>
+            </View>
+            <View style={styles.npkBarContainer}>
+                <View style={[styles.npkBarFill, { width: value, backgroundColor: color }]} />
+            </View>
+            <Text style={styles.npkDescText}>{description}</Text>
+        </View>
+    );
 
-					<View style={[styles.middleCard, styles.cardPosition]}>
-						<View style={[styles.middleCardChild, styles.cardChildPosition]} />
-						<Text style={[styles.npkData, styles.npkDataTypo]}>{`NPK Data `}</Text>
-						<View style={[styles.nitrogen, styles.nitrogenLayout]}>
-							<Text style={[styles.nitrogen2, styles.nitrogen2Typo]}>Nitrogen</Text>
-							<Image style={styles.nitrogenIcon} source={require("assets/image/AnalyzeIcon.png")} resizeMode="cover" />
-							<Text style={styles.text3}>65%</Text>
-						</View>
-						<View style={[styles.phosphorus, styles.nitrogenLayout]}>
-							<Text style={[styles.phosphorus2, styles.nitrogen2Typo]}>Phosphorus</Text>
-							<Image style={styles.nitrogenIcon} resizeMode="cover" />
-							<Text style={styles.text3}>65%</Text>
-						</View>
-						<View style={[styles.potassium, styles.nitrogenLayout]}>
-							<Text style={[styles.potassium2, styles.nitrogen2Typo]}>Potassium</Text>
-							<Image style={styles.nitrogenIcon} resizeMode="cover" />
-							<Text style={styles.text3}>65%</Text>
-						</View>
-					</View>
-					<Text style={[styles.defineFarmContext, styles.npkDataTypo]}>Define Farm Context  (for AI)</Text>
-					<Image style={styles.cardIcon} source={require("assets/image/ActSens.png")} resizeMode="cover" />
-					<View style={[styles.crop, styles.cropLayout1]}>
-						<View style={[styles.cropChild, styles.cropLayout1]} />
-						<View style={[styles.cropType, styles.cropLayout]}>
-							<Text style={[styles.cropType2, styles.cropType2Typo]}>Crop Type</Text>
-							<View style={[styles.cropTypeChild, styles.cropTypeChildBg]} />
-							<Text style={[styles.egCorn, styles.egCornLayout]}>e.g. : Corn, Potatoes</Text>
-						</View>
-					</View>
-					<View style={[styles.farm, styles.farmLayout]}>
-						<View style={[styles.farmChild, styles.farmLayout]} />
-						<Text style={[styles.farmType, styles.farmTypePosition]}>Farm Type</Text>
-						<View style={[styles.farmItem, styles.itemLayout]} />
-						<Text style={[styles.outdoorField, styles.outdoorFieldPosition]}>Outdoor Field</Text>
-						<Image style={[styles.dropdownIcon, styles.dropdownIconLayout]} resizeMode="cover" />
-					</View>
-					<View style={[styles.growth, styles.growthLayout]}>
-						<View style={[styles.growthChild, styles.growthLayout]} />
-						<Text style={[styles.growthStage, styles.stagePosition]}>Growth Stage</Text>
-						<View style={[styles.growthItem, styles.itemPosition]} />
-						<Text style={[styles.floweringStage, styles.stagePosition]}>Flowering Stage</Text>
-						<Image style={[styles.dropdownIcon2, styles.dropdownIconLayout]} resizeMode="cover" />
-					</View>
-					<Text style={[styles.soilSensor, styles.sensorClr]}>Soil Sensor</Text>
-					<Pressable style={[styles.analyseButton, styles.analyseLayout]} onPress={() => { navigation.navigate('Report' as never) }}>
-						<Image style={[styles.analyseButtonChild, styles.analyseLayout]} source={require("assets/image/AnalyzeIcon.png")} resizeMode="cover" />
-						<View style={[styles.analyzeWithGeminiAiParent, styles.observation2Position]}>
-							<Text style={[styles.analyzeWithGemini, styles.buddy2Typo]}>Analyze with Gemini AI</Text>
-							<Image style={[styles.maskGroupIcon, styles.egCornLayout]} source={require("assets/image/MaskgroupIcon.png")} resizeMode="cover" />
-						</View>
-					</Pressable>
-					<View style={[styles.observation, styles.observationLayout]}>
-						<View style={[styles.observationChild, styles.observationLayout]} />
-						<Text style={[styles.observation2, styles.observation2Position]}>Observation</Text>
-						<View style={[styles.observationItem, styles.itemPosition]} />
-						<Text style={[styles.addNotesEg, styles.egCornLayout]}>Add notes (e.g., yellow leaves...)</Text>
-					</View>
-				</View>
-			</ScrollView>
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.homePage}
+        >
+            {/* 1. Background Layer */}
+            <View style={[styles.dashboard, styles.dashboardPosition]} />
 
-			{/* Floating Buddy Button */}
-			<Pressable style={[styles.buddy, styles.buddyLayout]} onPress={() => { }}>
-				<View style={[styles.buddyChild, styles.buddyLayout]} />
-				<Text style={[styles.buddy2, styles.buddy2Typo]}>Buddy</Text>
-				<Image style={styles.buddyIcon} source={require("assets/image/buddySmall.png")} resizeMode="cover" />
-			</Pressable>
+            {/* 2. Top Header Section */}
+            <View style={[styles.topHeaeder, styles.topHeaederLayout]}>
+                <Pressable
+                    style={styles.userProfile}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Image
+                        style={styles.icon}
+                        source={require('assets/image/Profile.png')}
+                        resizeMode="cover"
+                    />
+                </Pressable>
+                <Text style={[styles.headerTitle, styles.locationClr]}>Soil Analysis</Text>
+            </View>
 
-		</View>);
+            {/* 3. Main Dashcard */}
+            <View style={styles.dashcard} />
+
+            {/* 4. Scrollable Content */}
+            <ScrollView
+                style={[styles.homePageInner, styles.homePageInnerFlexBox]}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.contentWrapper}>
+                    <View style={styles.overviewCard}>
+                        <Text style={styles.cardTitle}>Moisture Content</Text>
+                        <View style={styles.moistureRow}>
+                            <View style={styles.moistureCircle}>
+                                <Text style={styles.moistureMainValue}>65%</Text>
+                                <Text style={styles.moistureSubText}>Volumetric</Text>
+                            </View>
+                            <View style={styles.moistureStats}>
+                                <Text style={styles.statHint}>Status: <Text style={styles.boldGreen}>Optimal</Text></Text>
+                                <Text style={styles.statHint}>Ideal Range: 60% - 75%</Text>
+                                <Text style={styles.statHint}>Trend: <Text style={styles.boldBlue}>Stable ↑</Text></Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.detailCard}>
+                        <Text style={styles.cardTitle}>Soil Acidity (pH)</Text>
+                        <View style={styles.phValueContainer}>
+                            <Text style={styles.phBigNumber}>6.5</Text>
+                            <View style={styles.phStatusBadge}>
+                                <Text style={styles.phStatusText}>Slightly Acidic (Perfect)</Text>
+                            </View>
+                        </View>
+                        <LinearGradient
+                            colors={['#ee1c25', '#fff200', '#00a651', '#2e3192']}
+                            start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
+                            style={styles.phGradient}
+                        />
+                        <View style={styles.phMarkers}>
+                            <Text style={styles.markerText}>4.0</Text>
+                            <Text style={[styles.markerText, styles.activeMarker]}>6.5</Text>
+                            <Text style={styles.markerText}>9.0</Text>
+                        </View>
+                    </View>
+
+                    <Text style={styles.sectionHeading}>Nutrient Composition</Text>
+                    <NPKDetail label="Nitrogen (N)" value="85%" status="EXCELLENT" color="#2d4b2a" description="High levels promote leaf growth." />
+                    <NPKDetail label="Phosphorus (P)" value="45%" status="WARNING" color="#a25a28" description="Low levels hinder root growth." />
+
+                    <Text style={styles.sectionHeading}>AI Context Configuration</Text>
+                    <View style={styles.whiteCard}>
+                        <Text style={styles.inputLabel}>Current Crop Type</Text>
+                        <TextInput
+                            style={styles.inputBox}
+                            value={cropType}
+                            onChangeText={setCropType}
+                            placeholder="e.g. Corn, Potatoes"
+                        />
+
+                        <Text style={styles.inputLabel}>Farm Type</Text>
+                        <Pressable style={[styles.selectBox, { marginBottom: 15 }]} onPress={() => setActiveModal("farm")}>
+                            <Text style={styles.selectText} numberOfLines={1}>{farmType}</Text>
+                            <Image source={require("assets/image/dropdown.png")} style={styles.chevron} />
+                        </Pressable>
+
+                        <View style={styles.row}>
+                            <View style={{ flex: 1, marginRight: 10 }}>
+                                <Text style={styles.inputLabel}>Growth Stage</Text>
+                                <Pressable style={styles.selectBox} onPress={() => setActiveModal("growth")}>
+                                    <Text style={styles.selectText} numberOfLines={1}>{growthStage}</Text>
+                                    <Image source={require("assets/image/dropdown.png")} style={styles.chevron} />
+                                </Pressable>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.inputLabel}>Soil Type</Text>
+                                <Pressable style={styles.selectBox} onPress={() => setActiveModal("soil")}>
+                                    <Text style={styles.selectText} numberOfLines={1}>{soilType}</Text>
+                                    <Image source={require("assets/image/dropdown.png")} style={styles.chevron} />
+                                </Pressable>
+                            </View>
+                        </View>
+
+                        <Text style={[styles.inputLabel, { marginTop: 10 }]}>Visual Observation</Text>
+                        <TextInput
+                            style={[styles.inputBox, { height: 80, textAlignVertical: 'top' }]}
+                            multiline
+                            placeholder="e.g. Yellow leaves on the bottom..."
+                            value={observation}
+                            onChangeText={setObservation}
+                        />
+                    </View>
+
+                    <Pressable
+                        style={styles.analyzeButton}
+                        onPress={() => navigation.navigate('Report' as never)}
+                    >
+                        <Text style={styles.analyzeButtonText}>Generate Gemini Insight Report</Text>
+                    </Pressable>
+
+                    <View style={{ height: 100 }} />
+                </View>
+            </ScrollView>
+
+            <SelectionModal visible={activeModal === "farm"} title="Select Farm Type" items={FARM_TYPES} onSelect={setFarmType} onClose={() => setActiveModal(null)} />
+            <SelectionModal visible={activeModal === "growth"} title="Select Growth Stage" items={GROWTH_STAGES} onSelect={setGrowthStage} onClose={() => setActiveModal(null)} />
+            <SelectionModal visible={activeModal === "soil"} title="Select Soil Type" items={SOIL_TYPES} onSelect={setSoilType} onClose={() => setActiveModal(null)} />
+
+            {/* Buddy Popup Logic (Updated Button Style to match Home Page Exactly) */}
+            {isBuddyOpen ? (
+                <View style={styles.buddyPopup}>
+                    <View style={styles.chatHeader}>
+                        <View style={styles.buddyInfo}>
+                            <Image source={require("assets/image/buddySmall.png")} style={styles.chatIcon} />
+                            <Text style={styles.buddyName}>Buddy Assistant</Text>
+                        </View>
+                        <Pressable onPress={() => setIsBuddyOpen(false)}><Text style={styles.closeBtn}>✕</Text></Pressable>
+                    </View>
+                    <ScrollView style={styles.chatBody}>
+                        <View style={styles.buddyMsg}>
+                            <Text style={styles.msgText}>I see you're growing {cropType}. Your Nitrogen is looking great!</Text>
+                        </View>
+                    </ScrollView>
+                    <View style={styles.chatInputRow}>
+                        <TextInput style={styles.chatInput} placeholder="Ask about your soil..." />
+                        <Pressable style={styles.sendBtn}><Text style={styles.sendText}>Send</Text></Pressable>
+                    </View>
+                </View>
+            ) : (
+                <Pressable style={styles.buddyButton} onPress={() => setIsBuddyOpen(true)}>
+                    <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
+                        <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
+                        <Text style={styles.buddyText}>Buddy</Text>
+                    </LinearGradient>
+                </Pressable>
+            )}
+        </KeyboardAvoidingView>
+    );
 };
 
 const styles = StyleSheet.create({
-	dashcardPosition: {
-		width: 440,
-		left: 0,
-		position: "absolute"
-	},
-	cardPosition: {
-		width: 371,
-		marginLeft: -189,
-		left: "50%",
-		position: "absolute"
-	},
-	cardChildPosition: {
-		backgroundColor: "#e8ece4",
-		elevation: 7,
-		marginLeft: -185,
-		borderRadius: 16,
-		// @ts-ignore
-		boxShadow: "0px 0px 7px rgba(0, 0, 0, 0.8)",
-		width: 371,
-		left: "50%",
-		position: "absolute"
-	},
-	moistureLayout: {
-		width: 100,
-		position: "absolute"
-	},
-	sensorClr: {
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	childLayout: {
-		height: 8,
-		borderRadius: 100,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.2)",
-		width: 150,
-		elevation: 4,
-		backgroundColor: "#fff",
-		left: 0
-	},
-	itemLayout1: {
-		backgroundColor: "#2d4b2a",
-		height: 8,
-		borderRadius: 100
-	},
-	ph2Typo: {
-		left: 3,
-		fontSize: 13,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	npkPosition: {
-		top: 16,
-		position: "absolute"
-	},
-	npkDataTypo: {
-		height: 20,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	nitrogenLayout: {
-		height: 90,
-		top: 49,
-		width: 70,
-		position: "absolute"
-	},
-	nitrogen2Typo: {
-		height: 12,
-		top: 78,
-		fontSize: 11,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	cropLayout1: {
-		height: 101,
-		width: 330,
-		position: "absolute"
-	},
-	cropLayout: {
-		width: 296,
-		position: "absolute"
-	},
-	cropType2Typo: {
-		height: 19,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation"
-	},
-	cropTypeChildBg: {
-		backgroundColor: "rgba(217, 217, 217, 0.6)",
-		borderRadius: 8
-	},
-	egCornLayout: {
-		height: 16,
-		position: "absolute"
-	},
-	farmLayout: {
-		height: 75,
-		width: 180,
-		position: "absolute"
-	},
-	farmTypePosition: {
-		top: 11,
-		height: 19,
-		fontSize: 14,
-		color: "#1f291e"
-	},
-	itemLayout: {
-		backgroundColor: "rgba(217, 217, 217, 0.7)",
-		borderRadius: 5,
-		top: 36,
-		height: 24
-	},
-	outdoorFieldPosition: {
-		top: 40,
-		height: 16,
-		color: "#2d4b2a",
-		fontSize: 13
-	},
-	dropdownIconLayout: {
-		width: 20,
-		top: 38,
-		height: 20,
-		position: "absolute"
-	},
-	growthLayout: {
-		width: 140,
-		height: 75,
-		position: "absolute"
-	},
-	stagePosition: {
-		left: 14,
-		textAlign: "left",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	itemPosition: {
-		left: 9,
-		position: "absolute"
-	},
-	analyseLayout: {
-		height: 45,
-		position: "absolute"
-	},
-	observation2Position: {
-		top: 14,
-		position: "absolute"
-	},
-	buddy2Typo: {
-		color: "#fff",
-		fontSize: 15,
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	observationLayout: {
-		height: 151,
-		width: 330,
-		elevation: 4,
-		position: "absolute"
-	},
-	buddyLayout: {
-		height: 37,
-		width: 104,
-		position: "absolute"
-	},
-	farmerSensor: {
-		height: 956,
-		backgroundColor: "#f5f8f2",
-		overflow: "hidden",
-		width: "100%"
-	},
-	dashcard: {
-		top: 121,
-		// @ts-ignore
-		boxShadow: "0px -2px 5px rgba(0, 0, 0, 0.2)",
-		elevation: 5,
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-		height: 795,
-		backgroundColor: "#fff"
-	},
-	farmer1: {
-		top: 140,
-		bottom: 70,
-		maxWidth: 400,
-		width: 400,
-		left: 20,
-		position: "absolute"
-	},
-	topCardParent: {
-		marginLeft: -200,
-		top: -7,
-		height: 883,
-		left: "50%",
-		width: 400,
-		position: "absolute",
-		overflow: "hidden"
-	},
-	topCard: {
-		height: 172,
-		top: 19
-	},
-	topCardChild: {
-		top: 0,
-		height: 172
-	},
-	moisture: {
-		top: 31,
-		height: 123,
-		elevation: 4,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25)",
-		left: 31
-	},
-	eclipseIcon: {
-		height: 100,
-		top: 0,
-		left: 0
-	},
-	text: {
-		left: 27,
-		fontSize: 24,
-		width: 46,
-		height: 27,
-		textAlign: "left",
-		top: 37
-	},
-	moisture2: {
-		top: 106,
-		width: 62,
-		height: 17,
-		fontSize: 15,
-		left: 19,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	ph: {
-		top: 47,
-		left: 189,
-		height: 42,
-		width: 150,
-		position: "absolute"
-	},
-	phChild: {
-		top: 17,
-		position: "absolute"
-	},
-	phItem: {
-		left: 54,
-		width: 30,
-		top: 17,
-		position: "absolute"
-	},
-	ph2: {
-		fontSize: 13,
-		top: 0
-	},
-	optimal: {
-		left: 109,
-		color: "#2d4b2a",
-		fontSize: 11,
-		fontWeight: "700",
-		textAlign: "left",
-		fontFamily: "Sansation",
-		top: 0,
-		position: "absolute"
-	},
-	text2: {
-		top: 27,
-		fontWeight: "700",
-		fontSize: 13
-	},
-	npk: {
-		top: 107,
-		left: 188,
-		height: 24,
-		width: 150,
-		position: "absolute"
-	},
-	npkChild: {
-		height: 8,
-		borderRadius: 100,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.2)",
-		width: 150,
-		elevation: 4,
-		backgroundColor: "#fff",
-		left: 0
-	},
-	npkItem: {
-		width: 122,
-		backgroundColor: "#2d4b2a",
-		height: 8,
-		borderRadius: 100,
-		left: 0
-	},
-	npk2: {
-		left: 4,
-		fontSize: 13,
-		textAlign: "left",
-		top: 0
-	},
-	target: {
-		top: 2,
-		fontSize: 10,
-		left: 113,
-		textAlign: "left"
-	},
-	npkInner: {
-		left: 128,
-		borderStyle: "solid",
-		borderColor: "rgba(45, 75, 42, 0.8)",
-		borderRightWidth: 2,
-		width: 2,
-		height: 10
-	},
-	middleCard: {
-		top: 201,
-		height: 153
-	},
-	middleCardChild: {
-		top: 24,
-		height: 129
-	},
-	npkData: {
-		width: 72,
-		fontSize: 15,
-		height: 20,
-		top: 0,
-		left: 20
-	},
-	nitrogen: {
-		left: 46
-	},
-	nitrogen2: {
-		width: 44,
-		left: 13
-	},
-	nitrogenIcon: {
-		height: 70,
-		width: 70,
-		top: 0,
-		left: 0,
-		position: "absolute"
-	},
-	text3: {
-		top: 26,
-		width: 32,
-		height: 18,
-		fontSize: 16,
-		left: 19,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	phosphorus: {
-		left: 151
-	},
-	phosphorus2: {
-		left: 7,
-		width: 61
-	},
-	potassium: {
-		left: 256
-	},
-	potassium2: {
-		left: 8,
-		width: 54
-	},
-	defineFarmContext: {
-		top: 369,
-		width: 229,
-		fontSize: 16,
-		left: 31
-	},
-	cardIcon: {
-		top: 398,
-		height: 412,
-		borderRadius: 16,
-		// @ts-ignore
-		boxShadow: "0px 0px 7px rgba(0, 0, 0, 0.8)",
-		width: 371,
-		marginLeft: -189,
-		left: "50%",
-		position: "absolute"
-	},
-	crop: {
-		top: 422,
-		left: 35,
-		elevation: 4,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25)"
-	},
-	cropChild: {
-		borderRadius: 16,
-		top: 0,
-		backgroundColor: "#fff",
-		left: 0
-	},
-	cropType: {
-		height: 62,
-		left: 17,
-		top: 19
-	},
-	cropType2: {
-		width: 81,
-		fontSize: 14,
-		height: 19,
-		top: 0,
-		left: 0,
-		position: "absolute"
-	},
-	cropTypeChild: {
-		height: 35,
-		width: 296,
-		position: "absolute",
-		top: 27,
-		left: 0
-	},
-	egCorn: {
-		width: 119,
-		color: "rgba(45, 75, 42, 0.6)",
-		height: 16,
-		textAlign: "left",
-		fontFamily: "Sansation",
-		left: 13,
-		fontSize: 13,
-		top: 37
-	},
-	farm: {
-		top: 544,
-		left: 35
-	},
-	farmChild: {
-		elevation: 4,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25)",
-		borderRadius: 16,
-		top: 0,
-		backgroundColor: "#fff",
-		left: 0
-	},
-	farmType: {
-		width: 68,
-		left: 17,
-		textAlign: "left",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	farmItem: {
-		width: 146,
-		left: 17,
-		position: "absolute"
-	},
-	outdoorField: {
-		left: 25,
-		width: 82,
-		textAlign: "left",
-		fontFamily: "Sansation",
-		position: "absolute"
-	},
-	dropdownIcon: {
-		left: 136
-	},
-	growth: {
-		left: 225,
-		top: 544
-	},
-	growthChild: {
-		elevation: 4,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25)",
-		borderRadius: 16,
-		top: 0,
-		backgroundColor: "#fff",
-		left: 0
-	},
-	growthStage: {
-		width: 87,
-		top: 11,
-		height: 19,
-		fontSize: 14,
-		color: "#1f291e"
-	},
-	growthItem: {
-		width: 124,
-		backgroundColor: "rgba(217, 217, 217, 0.7)",
-		borderRadius: 5,
-		top: 36,
-		height: 24
-	},
-	floweringStage: {
-		width: 98,
-		top: 40,
-		height: 16,
-		color: "#2d4b2a",
-		fontSize: 13
-	},
-	dropdownIcon2: {
-		left: 113
-	},
-	soilSensor: {
-		top: 25,
-		width: 86,
-		height: 15,
-		fontSize: 16,
-		textAlign: "left",
-		left: 31
-	},
-	analyseButton: {
-		top: 825,
-		width: "100%",
-		height: 45,
-		position: "absolute"
-	},
-	analyseButtonChild: {
-		marginLeft: -103,
-		width: 206,
-		height: 45,
-		left: "50%",
-		borderRadius: 16,
-		top: 0,
-		backgroundColor: "#2d4b2a"
-	},
-	analyzeWithGeminiAiParent: {
-		left: "50%",
-		marginLeft: -90,
-		width: 180,
-		top: 14,
-		height: 17,
-		position: "absolute"
-	},
-	analyzeWithGemini: {
-		left: 21,
-		textAlign: "left",
-		top: 0
-	},
-	maskGroupIcon: {
-		top: 1,
-		width: 16,
-		left: 0
-	},
-	observation: {
-		top: 640,
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.3)",
-		left: 35
-	},
-	observationChild: {
-		// @ts-ignore
-		boxShadow: "0px 0px 4px rgba(0, 0, 0, 0.25)",
-		height: 151,
-		borderRadius: 16,
-		top: 0,
-		backgroundColor: "#fff",
-		left: 0
-	},
-	observation2: {
-		width: 99,
-		height: 19,
-		textAlign: "left",
-		color: "#1f291e",
-		fontFamily: "Sansation",
-		left: 17,
-		fontSize: 16
-	},
-	observationItem: {
-		top: 33,
-		width: 312,
-		height: 106,
-		backgroundColor: "rgba(217, 217, 217, 0.6)",
-		borderRadius: 8
-	},
-	addNotesEg: {
-		top: 42,
-		fontSize: 12,
-		width: 186,
-		color: "rgba(45, 75, 42, 0.6)",
-		height: 16,
-		textAlign: "left",
-		fontFamily: "Sansation",
-		left: 17
-	},
-	buddy: {
-		top: 820,
-		left: 316
-	},
-	buddyChild: {
-		backgroundColor: "#a25a28",
-		borderRadius: 8,
-		height: 37,
-		width: 104,
-		top: 0,
-		left: 0
-	},
-	buddy2: {
-		top: 7,
-		left: 38,
-		textAlign: "center",
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		width: 59,
-		height: 21,
-		fontWeight: "700"
-	},
-	buddyIcon: {
-		top: 5,
-		width: 25,
-		height: 25,
-		left: 13,
-		position: "absolute"
-	},
-	topHeader: {
-		top: 66,
-		left: 24,
-		width: 392
-	},
-	farmSensorAnalysis: {
-		top: 18,
-		left: 146,
-		fontSize: 20,
-		textAlign: "right",
-		fontWeight: "700"
-	},
-	userProfile: {
-		width: 45,
-		top: 0,
-		left: 0
-	},
-	icon: {
-		height: "100%",
-		// @ts-ignore
-		nodeWidth: 45,
-		// @ts-ignore
-		nodeHeight: 45,
-		width: "100%"
-	}
+    homePage: { flex: 1, backgroundColor: "#f5f8f2" },
+    dashboardPosition: { width: '100%', left: 0, position: "absolute" },
+    dashboard: { backgroundColor: "#f5f8f2", height: 300, top: 0 },
+    topHeaeder: {
+        top: 60,
+        paddingHorizontal: 25,
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'absolute',
+        zIndex: 10,
+    },
+    topHeaederLayout: { height: 50 },
+    headerTitle: { fontFamily: "Sansation", fontWeight: "700", color: "#1f291e", fontSize: 22 },
+    userProfile: { width: 45, height: 45 },
+    icon: { height: 45, width: 45, borderRadius: 22.5 },
+    locationClr: { color: "#1f291e" },
+    dashcard: {
+        top: 130,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        height: '100%',
+        backgroundColor: "#fff",
+        elevation: 10,
+        width: SCREEN_WIDTH,
+        position: "absolute",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+    },
+    homePageInner: { marginTop: 140, width: SCREEN_WIDTH },
+    homePageInnerFlexBox: { flex: 1 },
+    contentWrapper: { paddingHorizontal: 20 },
+    overviewCard: { backgroundColor: '#f9fbf7', borderRadius: 24, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#e8ece4' },
+    detailCard: { backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 20, elevation: 2, borderWidth: 1, borderColor: '#f0f0f0' },
+    cardTitle: { fontSize: 16, fontFamily: "Sansation", fontWeight: "700", color: "#6b7280", marginBottom: 15 },
+    moistureRow: { flexDirection: 'row', alignItems: 'center' },
+    moistureCircle: { width: 90, height: 90, borderRadius: 45, borderWidth: 6, borderColor: '#2d4b2a', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+    moistureMainValue: { fontSize: 22, fontWeight: 'bold' },
+    moistureSubText: { fontSize: 10, color: '#666' },
+    moistureStats: { marginLeft: 20, gap: 5 },
+    statHint: { fontSize: 13, color: '#4b5563' },
+    boldGreen: { color: '#2d4b2a', fontWeight: 'bold' },
+    boldBlue: { color: '#3b82f6', fontWeight: 'bold' },
+    phValueContainer: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 15 },
+    phBigNumber: { fontSize: 40, fontWeight: 'bold', color: '#1f291e' },
+    phStatusBadge: { backgroundColor: 'rgba(45, 75, 42, 0.1)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginLeft: 15 },
+    phStatusText: { fontSize: 12, color: '#2d4b2a', fontWeight: '700' },
+    phGradient: { height: 10, borderRadius: 5, width: '100%' },
+    phMarkers: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+    markerText: { fontSize: 12, color: '#9ca3af' },
+    activeMarker: { color: '#1f291e', fontWeight: 'bold' },
+    sectionHeading: { fontSize: 18, fontFamily: "Sansation", fontWeight: "bold", marginVertical: 15, color: '#1f291e' },
+    npkDetailCard: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 12, elevation: 1, borderWidth: 1, borderColor: '#f3f4f6' },
+    npkHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    npkLabelText: { fontSize: 15, fontWeight: '700' },
+    statusPillText: { fontSize: 10, fontWeight: 'bold' },
+    npkBarContainer: { height: 6, backgroundColor: '#f3f4f6', borderRadius: 3, marginBottom: 10 },
+    npkBarFill: { height: '100%', borderRadius: 3 },
+    npkDescText: { fontSize: 12, color: '#6b7280', lineHeight: 18 },
+    whiteCard: { backgroundColor: '#f9fafb', borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#e5e7eb' },
+    inputLabel: { fontSize: 12, color: '#6b7280', marginBottom: 8, fontFamily: 'Sansation', fontWeight: '700' },
+    inputBox: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 12, marginBottom: 15, fontSize: 14, color: '#1f291e' },
+    selectBox: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    selectText: { fontSize: 14, color: '#1f291e', fontWeight: '600' },
+    chevron: { width: 10, height: 10, tintColor: '#2d4b2a' },
+    row: { flexDirection: 'row' },
+    analyzeButton: { backgroundColor: '#2d4b2a', height: 55, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+    analyzeButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+
+    // --- Buddy Button (Exact Sync with Home Page) ---
+    buddyButton: {
+        position: 'absolute', bottom: 100, right: 20,
+        height: 44, width: 105, borderRadius: 12, elevation: 8, overflow: 'hidden'
+    },
+    buddyGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+    buddyText: { color: "#fff", fontWeight: "700", marginLeft: 6, fontSize: 14 },
+    buddyBotIcon: { width: 18, height: 18 },
+
+    // Modals & Chat
+    buddyPopup: { position: 'absolute', bottom: 100, right: 20, left: 20, height: SCREEN_HEIGHT * 0.45, backgroundColor: '#fff', borderRadius: 25, elevation: 20, overflow: 'hidden' },
+    chatHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: '#a25a28', alignItems: 'center' },
+    buddyInfo: { flexDirection: 'row', alignItems: 'center' },
+    chatIcon: { width: 20, height: 20, marginRight: 10 },
+    buddyName: { color: '#fff', fontWeight: 'bold' },
+    closeBtn: { color: '#fff', fontWeight: 'bold' },
+    chatBody: { flex: 1, padding: 15 },
+    buddyMsg: { backgroundColor: '#f3f4f6', padding: 12, borderRadius: 15, borderTopLeftRadius: 2, maxWidth: '85%' },
+    msgText: { fontSize: 13, lineHeight: 18 },
+    chatInputRow: { flexDirection: 'row', padding: 10, borderTopWidth: 1, borderColor: '#eee', alignItems: 'center' },
+    chatInput: { flex: 1, backgroundColor: '#f9fafb', borderRadius: 20, paddingHorizontal: 15, height: 40 },
+    sendBtn: { marginLeft: 10 },
+    sendText: { color: '#a25a28', fontWeight: 'bold' },
+    modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
+    modalContent: { backgroundColor: "#fff", borderRadius: 20, width: "100%", maxHeight: "80%", padding: 20 },
+    modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
+    modalItem: { paddingVertical: 12 },
+    modalItemText: { fontSize: 15, color: "#1f291e" },
+    modalSeparator: { height: 1, backgroundColor: "#f3f4f6" }
 });
 
 export default FarmerSensorScreen;

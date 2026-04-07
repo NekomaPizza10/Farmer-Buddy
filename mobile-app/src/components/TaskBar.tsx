@@ -10,12 +10,12 @@ const TaskBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
             {/* Map through the routes but cleanly insert the center button halfway */}
             {state.routes.map((route, index) => {
                 const { options } = descriptors[route.key];
-                
+
                 let iconSource;
                 let label = route.name;
                 if (route.name === "Dashboard") { iconSource = require("assets/image/Home.png"); label = "Home"; }
-                else if (route.name === "FarmerSensor") { iconSource = require("assets/image/ActSens.png"); label = "Sensor"; }
-                else if (route.name === "ChatBot") { iconSource = require("assets/image/chatbot.png"); label = "AI Bot"; }
+                else if (route.name === "FarmerSensor") { iconSource = require("assets/image/IoTSensor.png"); label = "Sensor"; }
+                else if (route.name === "ChatBot") { iconSource = require("assets/image/Buddy.png"); label = "AI Bot"; }
                 else if (route.name === "BodyCamera") { iconSource = require("assets/image/BodyCam.png"); label = "BodyCam"; }
 
                 const isFocused = state.index === index;

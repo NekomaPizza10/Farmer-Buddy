@@ -9,6 +9,7 @@ import EmployeeTabs from './EmployeeTabs';
 import WeatherScreen from '../screens/WeatherScreen';
 import ReportScreen from '../screens/ReportScreen';
 import LeafScanner from '../screens/LeafScanner';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,7 @@ const RootNavigator = () => {
           <Stack.Screen name="WeatherScreen" component={WeatherScreen} />
           <Stack.Screen name="Report" component={ReportScreen} options={{ presentation: 'transparentModal' }} />
           <Stack.Screen name="LeafScanner" component={LeafScanner} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
         </>
       )}
     </Stack.Navigator>

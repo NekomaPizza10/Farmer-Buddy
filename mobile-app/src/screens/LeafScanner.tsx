@@ -1,283 +1,192 @@
 import * as React from "react";
-import {Image, StyleSheet, View, Pressable, Text, Button} from "react-native";
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { StyleSheet, View, Pressable, Text, Button, Dimensions, Platform } from "react-native";
+import { CameraView, useCameraPermissions, FlashMode } from 'expo-camera';
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import DiagnoseOverlay from "../components/DiagnoseOverlay";
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const LeafScanner = () => {
-    const [permission, requestPermission] = useCameraPermissions();
-    const navigation = useNavigation();
-    const [isOverlayVisible, setIsOverlayVisible] = React.useState(false);
+	const [permission, requestPermission] = useCameraPermissions();
+	const navigation = useNavigation();
+	const [isOverlayVisible, setIsOverlayVisible] = React.useState(false);
 
-    if (!permission) {
-        return <View />;
-    }
+	// Flash Logic: off -> on -> auto
+	const [flash, setFlash] = React.useState<FlashMode>('off');
 
-    if (!permission.granted) {
-        return (
-            <View style={styles.permissionContainer}>
-                <Text style={{ textAlign: 'center', marginBottom: 20 }}>We need your permission to show the camera</Text>
-                <Button onPress={requestPermission} title="grant permission" />
-            </View>
-        );
-    }
-  	
-  	return (
-        <View style={styles.scanIcon}>
-            <CameraView style={StyleSheet.absoluteFill} facing="back" />
-            
-            <Image style={[styles.leafIcon, styles.iconLayout1]} resizeMode="cover" />
-            <Image style={styles.scanChild} resizeMode="cover" />
-            <Image style={styles.scanItem} resizeMode="cover" />
-            <Image style={[styles.scannerIcon, styles.iconLayout1]} resizeMode="cover" />
-            
-            <View style={[styles.cameraTopHeader, styles.scanInnerPosition]} />
-            <View style={[styles.scanInner, styles.scanInnerPosition]} />
-            
-            {/* The Capture Button */}
-            <Pressable style={styles.button} onPress={() => setIsOverlayVisible(true)}>
-                <View style={[styles.icon, styles.iconLayout]} />
-            </Pressable>
-            
-            <Image style={styles.galleryBackgroundIcon} resizeMode="cover" />
-            <Image style={styles.galleryIcon} resizeMode="cover" />
-            <Text style={[styles.gallery, styles.galleryTypo]}>Gallery</Text>
-            
-            <Text style={[styles.history, styles.historyPosition]}>History</Text>
-            <Image style={[styles.historyicon, styles.historyPosition]} resizeMode="cover" />
-            
-            <View style={styles.rectangleView} />
-            <Text style={styles.fitYouPlant}>Fit your plant leaf inside the frame</Text>
-            
-            <View style={[styles.topHeader, styles.topHeaderLayout]}>
-                <Pressable style={styles.back} onPress={() => navigation.goBack()}>
-                    <View style={[styles.icon2, styles.iconLayout]} />
-                </Pressable>
-                <Image style={[styles.flashIcon, styles.topHeaderLayout]} resizeMode="cover" />
-            </View>
+	const toggleFlash = () => {
+		setFlash((current) => {
+			if (current === 'off') return 'on';
+			if (current === 'on') return 'auto';
+			return 'off';
+		});
+	};
 
-            {/* AI Diagnose Output Modal */}
-            <DiagnoseOverlay 
-                visible={isOverlayVisible} 
-                onClose={() => setIsOverlayVisible(false)} 
-            />
-        </View>);
+	const getFlashIcon = () => {
+		if (flash === 'on') return "flash";
+		if (flash === 'auto') return "flash-outline";
+		return "flash-off";
+	};
+
+	if (!permission) return <View style={styles.scanIcon} />;
+
+	if (!permission.granted) {
+		return (
+			<View style={styles.permissionContainer}>
+				<Ionicons name="camera" size={60} color="#2d4b2a" style={{ alignSelf: 'center', marginBottom: 20 }} />
+				<Text style={styles.permissionText}>We need your permission to show the camera</Text>
+				<Pressable style={styles.grantBtn} onPress={requestPermission}>
+					<Text style={styles.grantBtnText}>Grant Permission</Text>
+				</Pressable>
+			</View>
+		);
+	}
+
+	return (
+		<View style={styles.scanIcon}>
+			{/* Camera View */}
+			<CameraView
+				style={StyleSheet.absoluteFill}
+				facing="back"
+				enableTorch={flash === 'on'}
+				flash={flash}
+			/>
+
+			{/* Scanning Overlay UI (Positions constant from Figma) */}
+			<View style={[styles.scannerFrame, styles.iconLayout1]}>
+				<View style={styles.cornerTopLeft} />
+				<View style={styles.cornerTopRight} />
+				<View style={styles.cornerBottomLeft} />
+				<View style={styles.cornerBottomRight} />
+			</View>
+
+			{/* Animated-style scan line */}
+			<View style={styles.scanItem} />
+
+			{/* Semi-transparent Header/Footer overlays */}
+			<View style={[styles.cameraTopHeader, styles.scanInnerPosition]} />
+			<View style={[styles.scanInner, styles.scanInnerPosition]} />
+
+			{/* Instruction Box */}
+			<View style={styles.rectangleView}>
+				<Text style={styles.fitYouPlant}>Fit your plant leaf inside the frame</Text>
+			</View>
+
+			{/* Top Header Controls */}
+			<View style={[styles.topHeader, styles.topHeaderLayout]}>
+				<Pressable style={styles.back} onPress={() => navigation.goBack()}>
+					<View style={styles.headerIconBg}>
+						<Ionicons name="chevron-back" size={20} color="#fff" />
+					</View>
+				</Pressable>
+
+				<Pressable style={styles.flashIcon} onPress={toggleFlash}>
+					<View style={[styles.headerIconBg, flash !== 'off' && { backgroundColor: '#22c55e' }]}>
+						<Ionicons name={getFlashIcon()} size={20} color="#fff" />
+						{flash === 'auto' && <Text style={styles.autoText}>A</Text>}
+					</View>
+				</Pressable>
+			</View>
+
+			{/* Bottom Controls */}
+			<Pressable style={styles.galleryGroup}>
+				<View style={styles.galleryIconBox}>
+					<Ionicons name="images" size={28} color="#2d4b2a" />
+				</View>
+				<Text style={styles.gallery}>Gallery</Text>
+			</Pressable>
+
+			{/* Capture Button */}
+			<Pressable style={styles.button} onPress={() => setIsOverlayVisible(true)}>
+				<View style={styles.shutterOuter}>
+					<View style={styles.shutterInner} />
+				</View>
+			</Pressable>
+
+			{/* History */}
+			<Pressable style={styles.historyGroup}>
+				<View style={styles.historyIconBox}>
+					<Ionicons name="time" size={28} color="#2d4b2a" />
+				</View>
+				<Text style={styles.history}>History</Text>
+			</Pressable>
+
+			{/* AI Diagnose Modal */}
+			<DiagnoseOverlay
+				visible={isOverlayVisible}
+				onClose={() => setIsOverlayVisible(false)}
+			/>
+		</View>
+	);
 };
 
 const styles = StyleSheet.create({
-    permissionContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        padding: 20
-    },
-  	scanInnerPosition: {
-    		width: 440,
-    		left: "50%",
-            marginLeft: -220,
-    		position: "absolute"
-  	},
-  	iconLayout1: {
-    		height: 364,
-    		width: 364,
-    		position: "absolute"
-  	},
-  	iconLayout: {
-    		height: "100%",
-    		width: "100%"
-  	},
-  	galleryTypo: {
-    		textShadowOffset: {
-      			width: 0,
-      			height: 0
-    		},
-    		textShadowColor: "rgba(0, 0, 0, 0.25)",
-    		justifyContent: "center",
-    		alignItems: "center",
-    		display: "flex",
-    		textAlign: "center",
-    		color: "#3f3f3f",
-    		fontFamily: "Sansation",
-    		fontWeight: "700",
-    		fontSize: 15
-  	},
-  	historyPosition: {
-    		left: 336,
-    		position: "absolute"
-  	},
-  	topHeaderLayout: {
-    		height: 31,
-    		position: "absolute"
-  	},
-  	scanIcon: {
-            flex: 1,
-    		overflow: "hidden",
-            backgroundColor: "#000"
-  	},
-  	leafIcon: {
-    		marginTop: -182,
-    		marginLeft: -182,
-    		top: "50%",
-    		left: "50%"
-  	},
-  	scanChild: {
-    		top: 338,
-    		left: 111,
-            // @ts-ignore
-    		filter: "drop-shadow(0px 0px 4px #fff) drop-shadow(0px 0px 18px rgba(255, 255, 255, 0.25))",
-    		width: 218,
-    		height: 280,
-    		position: "absolute"
-  	},
-  	scanItem: {
-    		top: 616,
-    		left: 35,
-    		width: 365,
-    		height: 6,
-    		position: "absolute"
-  	},
-  	scannerIcon: {
-    		top: 296,
-    		left: 38,
-            // @ts-ignore
-    		filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))"
-  	},
-  	cameraTopHeader: {
-    		backgroundColor: "rgba(217, 217, 217, 0.4)",
-    		height: 108,
-    		top: 0
-  	},
-  	scanInner: {
-    		top: 786,
-    		borderTopLeftRadius: 40,
-    		borderTopRightRadius: 40,
-    		backgroundColor: "rgba(217, 217, 217, 0.8)",
-    		height: 300,
-  	},
-  	button: {
-    		left: "50%",
-            marginLeft: -50,
-    		top: 816,
-    		width: 100,
-    		height: 100,
-    		position: "absolute"
-  	},
-  	icon: {
-            // @ts-ignore
-    		nodeWidth: 100,
-            // @ts-ignore
-    		nodeHeight: 100,
-            backgroundColor: "#22c55e",
-            borderRadius: 50,
-            borderWidth: 4,
-            borderColor: "#fff"
-  	},
-  	galleryBackgroundIcon: {
-    		top: 834,
-    		left: 40,
-            // @ts-ignore
-    		filter: "blur(0.8px)",
-    		borderRadius: 10,
-    		width: 64,
-    		height: 64,
-    		position: "absolute"
-  	},
-  	galleryIcon: {
-    		top: 846,
-    		left: 52,
-            // @ts-ignore
-    		filter: "drop-shadow(0px -1px 4px rgba(0, 0, 0, 0.5))",
-    		width: 40,
-    		height: 40,
-    		position: "absolute",
-            backgroundColor: "rgba(0,0,0,0.2)",
-            borderRadius: 8
-  	},
-  	gallery: {
-    		top: 905,
-    		left: 42,
-    		width: 62,
-    		height: 16,
-    		textShadowRadius: 5,
-    		position: "absolute"
-  	},
-  	history: {
-    		top: 898,
-    		width: 53,
-    		height: 15,
-    		textShadowRadius: 10,
-    		textShadowOffset: {
-      			width: 0,
-      			height: 0
-    		},
-    		textShadowColor: "rgba(0, 0, 0, 0.25)",
-    		justifyContent: "center",
-    		alignItems: "center",
-    		display: "flex",
-    		textAlign: "center",
-    		color: "#3f3f3f",
-    		fontFamily: "Sansation",
-    		fontWeight: "700",
-    		fontSize: 15
-  	},
-  	historyicon: {
-    		top: 841,
-            // @ts-ignore
-    		filter: "drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.25))",
-    		width: 50,
-    		height: 50,
-            backgroundColor: "rgba(0,0,0,0.2)",
-            borderRadius: 25
-  	},
-  	rectangleView: {
-    		top: 751,
-    		left: "50%",
-            marginLeft: -111,
-    		borderRadius: 8,
-    		backgroundColor: "rgba(217,217,217, 0.8)",
-    		width: 222,
-    		height: 23,
-    		position: "absolute"
-  	},
-  	fitYouPlant: {
-    		marginLeft: -96,
-    		top: 754,
-    		fontSize: 12,
-    		color: "#000",
-    		textAlign: "center",
-    		width: 192,
-    		height: 13,
-    		left: "50%",
-    		position: "absolute"
-  	},
-  	topHeader: {
-    		top: 66,
-    		left: 22,
-    		width: 394
-  	},
-  	back: {
-    		top: 5,
-    		width: 22,
-    		height: 22,
-    		left: 0,
-    		position: "absolute"
-  	},
-  	icon2: {
-            // @ts-ignore
-    		filter: "drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.25))",
-            // @ts-ignore
-    		nodeWidth: 22,
-            // @ts-ignore
-    		nodeHeight: 22,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            borderRadius: 11
-  	},
-  	flashIcon: {
-    		left: 363,
-            // @ts-ignore
-    		filter: "drop-shadow(0px 0px 7px rgba(0, 0, 0, 0.25)) drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))",
-    		width: 31,
-    		top: 0
-  	}
+	scanIcon: { flex: 1, backgroundColor: "#000" },
+	permissionContainer: { flex: 1, justifyContent: 'center', padding: 40, backgroundColor: '#f5f8f2' },
+	permissionText: { textAlign: 'center', fontSize: 16, fontFamily: 'Sansation', color: '#1f291e', marginBottom: 30 },
+	grantBtn: { backgroundColor: '#2d4b2a', paddingVertical: 15, borderRadius: 12, alignItems: 'center' },
+	grantBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
+	scanInnerPosition: {
+		width: 440,
+		left: "50%",
+		marginLeft: -220,
+		position: "absolute"
+	},
+	iconLayout1: {
+		height: 300,
+		width: 300,
+		position: "absolute"
+	},
+
+	// Top Header Section
+	cameraTopHeader: { backgroundColor: "rgba(0, 0, 0, 0.3)", height: 120, top: 0 },
+	topHeader: { top: 60, left: 22, width: SCREEN_WIDTH - 44, flexDirection: 'row', justifyContent: 'space-between', position: 'absolute' },
+	topHeaderLayout: { height: 40 },
+	headerIconBg: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: 'center', alignItems: 'center' },
+	back: {}, // Fixed: Added missing property
+	flashIcon: {}, // Fixed: Added missing property
+	autoText: { position: 'absolute', right: 8, bottom: 8, fontSize: 8, color: '#fff', fontWeight: 'bold' },
+
+	// Scanner Frame
+	scannerFrame: {
+		top: '50%', left: '50%', marginTop: -200, marginLeft: -150,
+		borderWidth: 0,
+	},
+	cornerTopLeft: { position: 'absolute', top: 0, left: 0, width: 40, height: 40, borderLeftWidth: 4, borderTopWidth: 4, borderColor: '#22c55e' },
+	cornerTopRight: { position: 'absolute', top: 0, right: 0, width: 40, height: 40, borderRightWidth: 4, borderTopWidth: 4, borderColor: '#22c55e' },
+	cornerBottomLeft: { position: 'absolute', bottom: 0, left: 0, width: 40, height: 40, borderLeftWidth: 4, borderBottomWidth: 4, borderColor: '#22c55e' },
+	cornerBottomRight: { position: 'absolute', bottom: 0, right: 0, width: 40, height: 40, borderRightWidth: 4, borderBottomWidth: 4, borderColor: '#22c55e' },
+
+	// Scan Line
+	scanItem: {
+		top: '50%', left: '50%', marginLeft: -150, marginTop: -50,
+		width: 300, height: 2, backgroundColor: '#22c55e', position: "absolute",
+		shadowColor: "#22c55e", shadowOpacity: 1, shadowRadius: 10, elevation: 10
+	},
+
+	// Bottom Dashcard
+	scanInner: { top: 786, borderTopLeftRadius: 40, borderTopRightRadius: 40, backgroundColor: "rgba(255, 255, 255, 0.9)", height: 300 },
+	rectangleView: {
+		top: 740, left: "50%", marginLeft: -111, borderRadius: 20,
+		backgroundColor: "rgba(0,0,0, 0.6)", width: 222, height: 30, position: "absolute",
+		justifyContent: 'center', alignItems: 'center'
+	},
+	fitYouPlant: { fontSize: 12, color: "#fff", fontFamily: 'Sansation', fontWeight: 'bold' },
+
+	// Controls
+	button: { left: "50%", marginLeft: -45, top: 815, width: 90, height: 90, position: "absolute" },
+	shutterOuter: { flex: 1, backgroundColor: "transparent", borderRadius: 45, borderWidth: 6, borderColor: "#2d4b2a", padding: 5 },
+	shutterInner: { flex: 1, backgroundColor: "#22c55e", borderRadius: 40 },
+
+	galleryGroup: { position: 'absolute', top: 830, left: 45, alignItems: 'center' },
+	galleryIconBox: { width: 55, height: 55, borderRadius: 15, backgroundColor: '#e8ece4', justifyContent: 'center', alignItems: 'center', elevation: 2 },
+	gallery: { marginTop: 8, fontSize: 12, fontWeight: '700', color: '#2d4b2a', fontFamily: "Sansation" },
+
+	historyGroup: { position: 'absolute', top: 830, right: 45, alignItems: 'center' },
+	historyIconBox: { width: 55, height: 55, borderRadius: 30, backgroundColor: '#e8ece4', justifyContent: 'center', alignItems: 'center', elevation: 2 },
+	history: { marginTop: 8, fontSize: 12, fontWeight: '700', color: '#2d4b2a', fontFamily: "Sansation" }
 });
 
 export default LeafScanner;
