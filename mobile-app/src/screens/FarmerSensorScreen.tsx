@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import BuddyChatPopup from "../components/BuddyChatPopup";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -99,7 +100,7 @@ const FarmerSensorScreen = () => {
             <View style={[styles.topHeaeder, styles.topHeaederLayout]}>
                 <Pressable
                     style={styles.userProfile}
-                    onPress={() => navigation.goBack()}
+                    onPress={() => navigation.navigate('Settings' as never)}
                 >
                     <Image
                         style={styles.icon}
@@ -216,27 +217,14 @@ const FarmerSensorScreen = () => {
             <SelectionModal visible={activeModal === "growth"} title="Select Growth Stage" items={GROWTH_STAGES} onSelect={setGrowthStage} onClose={() => setActiveModal(null)} />
             <SelectionModal visible={activeModal === "soil"} title="Select Soil Type" items={SOIL_TYPES} onSelect={setSoilType} onClose={() => setActiveModal(null)} />
 
-            {/* Buddy Popup Logic (Updated Button Style to match Home Page Exactly) */}
-            {isBuddyOpen ? (
-                <View style={styles.buddyPopup}>
-                    <View style={styles.chatHeader}>
-                        <View style={styles.buddyInfo}>
-                            <Image source={require("assets/image/buddySmall.png")} style={styles.chatIcon} />
-                            <Text style={styles.buddyName}>Buddy Assistant</Text>
-                        </View>
-                        <Pressable onPress={() => setIsBuddyOpen(false)}><Text style={styles.closeBtn}>✕</Text></Pressable>
-                    </View>
-                    <ScrollView style={styles.chatBody}>
-                        <View style={styles.buddyMsg}>
-                            <Text style={styles.msgText}>I see you're growing {cropType}. Your Nitrogen is looking great!</Text>
-                        </View>
-                    </ScrollView>
-                    <View style={styles.chatInputRow}>
-                        <TextInput style={styles.chatInput} placeholder="Ask about your soil..." />
-                        <Pressable style={styles.sendBtn}><Text style={styles.sendText}>Send</Text></Pressable>
-                    </View>
-                </View>
-            ) : (
+            <BuddyChatPopup
+                isVisible={isBuddyOpen}
+                onClose={() => setIsBuddyOpen(false)}
+                initialMessage={`I see you're growing ${cropType}. Your Nitrogen is looking great!`}
+                placeholder="Ask about your soil..."
+            />
+
+            {!isBuddyOpen && (
                 <Pressable style={styles.buddyButton} onPress={() => setIsBuddyOpen(true)}>
                     <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
                         <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
@@ -330,20 +318,6 @@ const styles = StyleSheet.create({
     buddyText: { color: "#fff", fontWeight: "700", marginLeft: 6, fontSize: 14 },
     buddyBotIcon: { width: 18, height: 18 },
 
-    // Modals & Chat
-    buddyPopup: { position: 'absolute', bottom: 100, right: 20, left: 20, height: SCREEN_HEIGHT * 0.45, backgroundColor: '#fff', borderRadius: 25, elevation: 20, overflow: 'hidden' },
-    chatHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: '#a25a28', alignItems: 'center' },
-    buddyInfo: { flexDirection: 'row', alignItems: 'center' },
-    chatIcon: { width: 20, height: 20, marginRight: 10 },
-    buddyName: { color: '#fff', fontWeight: 'bold' },
-    closeBtn: { color: '#fff', fontWeight: 'bold' },
-    chatBody: { flex: 1, padding: 15 },
-    buddyMsg: { backgroundColor: '#f3f4f6', padding: 12, borderRadius: 15, borderTopLeftRadius: 2, maxWidth: '85%' },
-    msgText: { fontSize: 13, lineHeight: 18 },
-    chatInputRow: { flexDirection: 'row', padding: 10, borderTopWidth: 1, borderColor: '#eee', alignItems: 'center' },
-    chatInput: { flex: 1, backgroundColor: '#f9fafb', borderRadius: 20, paddingHorizontal: 15, height: 40 },
-    sendBtn: { marginLeft: 10 },
-    sendText: { color: '#a25a28', fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
     modalContent: { backgroundColor: "#fff", borderRadius: 20, width: "100%", maxHeight: "80%", padding: 20 },
     modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15, textAlign: "center" },

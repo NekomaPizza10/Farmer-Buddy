@@ -40,8 +40,8 @@ export default function WeatherScreen() {
     });
 
     return (
-        <LinearGradient 
-            colors={['#dee8f8', '#ffdfd3']} 
+        <LinearGradient
+            colors={['#dee8f8', '#ffdfd3']}
             style={styles.container}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}

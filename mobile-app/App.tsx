@@ -8,7 +8,7 @@ import { ShiftProvider } from '@/hooks/useShift';
 export default function App() {
   return (
     <AuthProvider>
-      <AppProvider> 
+      <AppProvider>
         <ShiftProvider>
           <NavigationContainer>
             <RootNavigator />

@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo } from "react";
 import { StyleSheet, View, Image, Text, Pressable, Animated, Easing, Modal, ScrollView, Dimensions, TextInput, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import BuddyChatPopup from "../components/BuddyChatPopup";
 import MemberShiftModal from "../components/MemberShiftModal"; // Fixed: Import the correct Modal component
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -20,6 +21,7 @@ export default function BodyCamera() {
     const [isOn, setIsOn] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [selectedMember, setSelectedMember] = useState<string | null>(null);
+    const [isBuddyOpen, setIsBuddyOpen] = useState(false);
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState("");
@@ -174,13 +176,21 @@ export default function BodyCamera() {
                 </View>
             </ScrollView>
 
-            {/* 5. Floating Buddy Button */}
-            <Pressable style={styles.buddyButton} onPress={() => { }}>
-                <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
-                    <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
-                    <Text style={styles.buddyText}>Buddy</Text>
-                </LinearGradient>
-            </Pressable>
+            <BuddyChatPopup 
+                isVisible={isBuddyOpen} 
+                onClose={() => setIsBuddyOpen(false)} 
+                initialMessage={`I'm monitoring the team's activity. All body cams are currently ${isOn ? 'ACTIVE' : 'INACTIVE'}.`}
+                placeholder="Ask about team activity..."
+            />
+
+            {!isBuddyOpen && (
+                <Pressable style={styles.buddyButton} onPress={() => setIsBuddyOpen(true)}>
+                    <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
+                        <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
+                        <Text style={styles.buddyText}>Buddy</Text>
+                    </LinearGradient>
+                </Pressable>
+            )}
 
             {/* Confirmation Modal */}
             <Modal transparent visible={showConfirm} animationType="none">

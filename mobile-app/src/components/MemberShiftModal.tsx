@@ -1,6 +1,7 @@
 import * as React from "react";
 import { StyleSheet, View, Text, Image, Pressable, ScrollView, SafeAreaView, Platform, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import BuddyChatPopup from "./BuddyChatPopup";
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -13,6 +14,7 @@ interface MemberShiftModalProps {
 const MemberShiftModal: React.FC<MemberShiftModalProps> = ({ visible, onClose, memberName }) => {
     const [selectedSegment, setSelectedSegment] = React.useState<any>(null);
     const [isSummaryExpanded, setIsSummaryExpanded] = React.useState(false);
+    const [isBuddyOpen, setIsBuddyOpen] = React.useState(false);
 
     let shiftName = "Morning Shift: 08:00 - 12:00";
     if (memberName === "Sarah") {
@@ -90,13 +92,22 @@ const MemberShiftModal: React.FC<MemberShiftModalProps> = ({ visible, onClose, m
                     <View style={{ height: 200 }} />
                 </ScrollView>
 
-                {/* Buddy Button - Constant Position */}
-                <Pressable style={styles.buddyButton} onPress={() => { }}>
-                    <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
-                        <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
-                        <Text style={styles.buddyText}>Buddy</Text>
-                    </LinearGradient>
-                </Pressable>
+                {/* Buddy Component Logic */}
+                <BuddyChatPopup 
+                    isVisible={isBuddyOpen} 
+                    onClose={() => setIsBuddyOpen(false)} 
+                    initialMessage={`I've analyzed ${memberName}'s shift. Would you like a detailed report or help with anything else?`}
+                    placeholder="Ask Buddy about this shift..."
+                />
+
+                {!isBuddyOpen && (
+                    <Pressable style={styles.buddyButton} onPress={() => setIsBuddyOpen(true)}>
+                        <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
+                            <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
+                            <Text style={styles.buddyText}>Buddy</Text>
+                        </LinearGradient>
+                    </Pressable>
+                )}
             </View>
         );
     }
@@ -181,12 +192,21 @@ const MemberShiftModal: React.FC<MemberShiftModalProps> = ({ visible, onClose, m
                 <View style={{ height: 200 }} />
             </ScrollView>
 
-            <Pressable style={styles.buddyButton} onPress={() => { }}>
-                <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
-                    <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
-                    <Text style={styles.buddyText}>Buddy</Text>
-                </LinearGradient>
-            </Pressable>
+            <BuddyChatPopup 
+                isVisible={isBuddyOpen} 
+                onClose={() => setIsBuddyOpen(false)} 
+                initialMessage={`How can I help you with ${memberName}'s shift data today?`}
+                placeholder="Ask Buddy anything..."
+            />
+
+            {!isBuddyOpen && (
+                <Pressable style={styles.buddyButton} onPress={() => setIsBuddyOpen(true)}>
+                    <LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
+                        <Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
+                        <Text style={styles.buddyText}>Buddy</Text>
+                    </LinearGradient>
+                </Pressable>
+            )}
         </View>
     );
 };

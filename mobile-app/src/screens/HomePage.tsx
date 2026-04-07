@@ -1,7 +1,8 @@
 import * as React from "react";
-import { StyleSheet, View, Text, Image, Pressable, ScrollView, Dimensions, Platform } from "react-native";
+import { StyleSheet, View, Text, Image, Pressable, ScrollView, Dimensions, Platform, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import BuddyChatPopup from "../components/BuddyChatPopup";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -9,6 +10,7 @@ const HomePage = () => {
 	const navigation = useNavigation();
 	type SensorState = 'off' | 'activating' | 'on' | 'deactivating';
 	const [sensorState, setSensorState] = React.useState<SensorState>('off');
+	const [isBuddyOpen, setIsBuddyOpen] = React.useState(false);
 
 	const handleSensorPress = () => {
 		if (sensorState === 'off') {
@@ -181,13 +183,21 @@ const HomePage = () => {
 				</View>
 			</ScrollView>
 
-			{/* Buddy Button - Constant Concept */}
-			<Pressable style={styles.buddyButton} onPress={() => { }}>
-				<LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
-					<Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
-					<Text style={styles.buddyText}>Buddy</Text>
-				</LinearGradient>
-			</Pressable>
+			<BuddyChatPopup 
+				isVisible={isBuddyOpen} 
+				onClose={() => setIsBuddyOpen(false)} 
+				initialMessage="Good morning! How can I assist you with your farm today?"
+				placeholder="Ask Buddy anything..."
+			/>
+
+			{!isBuddyOpen && (
+				<Pressable style={styles.buddyButton} onPress={() => setIsBuddyOpen(true)}>
+					<LinearGradient colors={['#a25a28', '#8b4a1f']} style={styles.buddyGradient}>
+						<Image style={styles.buddyBotIcon} source={require('assets/image/buddySmall.png')} />
+						<Text style={styles.buddyText}>Buddy</Text>
+					</LinearGradient>
+				</Pressable>
+			)}
 		</View>
 	);
 };

@@ -242,155 +242,155 @@ export default function ManagerDashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor={themeColors.accent}
-          colors={[themeColors.accent]}
-        />
-      }
-    >
-      <View style={styles.headerBar}>
-        <View>
-          <Text style={styles.greeting}>{t('welcome')},</Text>
-          <Text style={styles.name}>{profile?.name || 'Manager'}</Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={themeColors.accent}
+            colors={[themeColors.accent]}
+          />
+        }
+      >
+        <View style={styles.headerBar}>
+          <View>
+            <Text style={styles.greeting}>{t('welcome')},</Text>
+            <Text style={styles.name}>{profile?.name || 'Manager'}</Text>
+          </View>
+          <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
+            <Text style={styles.signOutText}>{t('Sign Out')}</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
-          <Text style={styles.signOutText}>{t('Sign Out')}</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Shift Control Card */}
-      <View style={[styles.shiftCard, activeShift ? styles.shiftCardActive : null]}>
-        {activeShift ? (
-          <>
-            <View style={styles.shiftHeader}>
-              <View style={styles.shiftLiveIndicator}>
-                <View style={styles.liveDot} />
-                <Text style={styles.liveText}>{t('SHIFT ACTIVE')}</Text>
+        {/* Shift Control Card */}
+        <View style={[styles.shiftCard, activeShift ? styles.shiftCardActive : null]}>
+          {activeShift ? (
+            <>
+              <View style={styles.shiftHeader}>
+                <View style={styles.shiftLiveIndicator}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>{t('SHIFT ACTIVE')}</Text>
+                </View>
+                <Text style={styles.shiftTimer}>{formatTime(elapsedSeconds)}</Text>
               </View>
-              <Text style={styles.shiftTimer}>{formatTime(elapsedSeconds)}</Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.shiftButton, styles.endShiftButton, actionLoading && styles.buttonDisabled]}
-              onPress={handleEndShift}
-              disabled={actionLoading}
-            >
-              {actionLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.shiftButtonText}>{t('End Shift')}</Text>
-              )}
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <View style={styles.shiftHeader}>
-              <Text style={styles.shiftIdleText}>{t('No active shift')}</Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.shiftButton, styles.startShiftButton, actionLoading && styles.buttonDisabled]}
-              onPress={handleStartShift}
-              disabled={actionLoading || shiftLoading}
-            >
-              {actionLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.shiftButtonText}>{t('Start Shift')}</Text>
-              )}
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
-
-      {/* Live Video Grid (only during active shift) */}
-      {activeShift && (
-        <View style={styles.liveGridSection}>
-          <Text style={styles.sectionTitle}>{t('Live Feeds')}</Text>
-          <ManagerLiveGrid shiftId={activeShift.id} />
+              <TouchableOpacity
+                style={[styles.shiftButton, styles.endShiftButton, actionLoading && styles.buttonDisabled]}
+                onPress={handleEndShift}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.shiftButtonText}>{t('End Shift')}</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.shiftHeader}>
+                <Text style={styles.shiftIdleText}>{t('No active shift')}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.shiftButton, styles.startShiftButton, actionLoading && styles.buttonDisabled]}
+                onPress={handleStartShift}
+                disabled={actionLoading || shiftLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.shiftButtonText}>{t('Start Shift')}</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
         </View>
-      )}
 
-      {/* Recordings section (visible during active shift) */}
-      {activeShift && recordingSummaries.length > 0 && (
+        {/* Live Video Grid (only during active shift) */}
+        {activeShift && (
+          <View style={styles.liveGridSection}>
+            <Text style={styles.sectionTitle}>{t('Live Feeds')}</Text>
+            <ManagerLiveGrid shiftId={activeShift.id} />
+          </View>
+        )}
+
+        {/* Recordings section (visible during active shift) */}
+        {activeShift && recordingSummaries.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{`📼 ${t('Recordings')}`}</Text>
+            {employees
+              .filter((e) => recordingSummaries.find((r) => r.employee_id === e.id))
+              .map((emp) => {
+                const rec = recordingSummaries.find((r) => r.employee_id === emp.id);
+                const count = rec?.count ?? 0;
+                const summaryCount = rec?.summaryCount ?? 0;
+                return (
+                  <TouchableOpacity
+                    key={emp.id}
+                    style={styles.recordingCard}
+                    onPress={() =>
+                      navigation.navigate('RecordingsList', {
+                        shiftId: activeShift.id,
+                        employeeId: emp.id,
+                        employeeName: emp.name,
+                      })
+                    }
+                  >
+                    <View style={styles.recordingInfo}>
+                      <Text style={styles.recordingName}>{emp.name}</Text>
+                      <Text style={styles.recordingCount}>
+                        {count} {t('recording')}{count !== 1 ? 's' : ''}
+                        {summaryCount > 0 ? ` · ${summaryCount} AI ${summaryCount !== 1 ? 'summaries' : 'summary'} ready` : ''}
+                      </Text>
+                    </View>
+                    <Text style={styles.recordingArrow}>›</Text>
+                  </TouchableOpacity>
+                );
+              })}
+          </View>
+        )}
+
+        {/* Employee List */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{`📼 ${t('Recordings')}`}</Text>
-          {employees
-            .filter((e) => recordingSummaries.find((r) => r.employee_id === e.id))
-            .map((emp) => {
-              const rec = recordingSummaries.find((r) => r.employee_id === emp.id);
-              const count = rec?.count ?? 0;
-              const summaryCount = rec?.summaryCount ?? 0;
+          <Text style={styles.sectionTitle}>
+            {`${t('Employees')} (${employees.length}) — ${onlineCount} online`}
+          </Text>
+          {employees.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>👥</Text>
+              <Text style={styles.emptyText}>{t('No employees yet')}</Text>
+              <Text style={styles.emptySubtext}>
+                {t('Employees will appear here once their accounts are created and assigned the employee role.')}
+              </Text>
+            </View>
+          ) : (
+            employees.map((item) => {
+              const online = isUserOnline(item.id);
               return (
-                <TouchableOpacity
-                  key={emp.id}
-                  style={styles.recordingCard}
-                  onPress={() =>
-                    navigation.navigate('RecordingsList', {
-                      shiftId: activeShift.id,
-                      employeeId: emp.id,
-                      employeeName: emp.name,
-                    })
-                  }
-                >
-                  <View style={styles.recordingInfo}>
-                    <Text style={styles.recordingName}>{emp.name}</Text>
-                    <Text style={styles.recordingCount}>
-                      {count} {t('recording')}{count !== 1 ? 's' : ''}
-                      {summaryCount > 0 ? ` · ${summaryCount} AI ${summaryCount !== 1 ? 'summaries' : 'summary'} ready` : ''}
+                <View key={item.id} style={styles.employeeCard}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                      {item.name?.charAt(0)?.toUpperCase() || '?'}
                     </Text>
                   </View>
-                  <Text style={styles.recordingArrow}>›</Text>
-                </TouchableOpacity>
+                  <View style={styles.employeeInfo}>
+                    <Text style={styles.employeeName}>{item.name}</Text>
+                    <Text style={styles.employeeEmail}>{item.email}</Text>
+                  </View>
+                  <View style={styles.statusBadge}>
+                    <View style={[styles.statusDot, online ? styles.statusDotOnline : styles.statusDotOffline]} />
+                    <Text style={[styles.statusLabel, online ? styles.statusLabelOnline : styles.statusLabelOffline]}>
+                      {online ? t('Online') : t('Offline')}
+                    </Text>
+                  </View>
+                </View>
               );
-            })}
+            })
+          )}
         </View>
-      )}
-
-      {/* Employee List */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {`${t('Employees')} (${employees.length}) — ${onlineCount} online`}
-        </Text>
-        {employees.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>👥</Text>
-            <Text style={styles.emptyText}>{t('No employees yet')}</Text>
-            <Text style={styles.emptySubtext}>
-              {t('Employees will appear here once their accounts are created and assigned the employee role.')}
-            </Text>
-          </View>
-        ) : (
-          employees.map((item) => {
-            const online = isUserOnline(item.id);
-            return (
-              <View key={item.id} style={styles.employeeCard}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {item.name?.charAt(0)?.toUpperCase() || '?'}
-                  </Text>
-                </View>
-                <View style={styles.employeeInfo}>
-                  <Text style={styles.employeeName}>{item.name}</Text>
-                  <Text style={styles.employeeEmail}>{item.email}</Text>
-                </View>
-                <View style={styles.statusBadge}>
-                  <View style={[styles.statusDot, online ? styles.statusDotOnline : styles.statusDotOffline]} />
-                  <Text style={[styles.statusLabel, online ? styles.statusLabelOnline : styles.statusLabelOffline]}>
-                    {online ? t('Online') : t('Offline')}
-                  </Text>
-                </View>
-              </View>
-            );
-          })
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
